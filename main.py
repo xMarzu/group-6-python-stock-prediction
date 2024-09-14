@@ -30,7 +30,7 @@ def getData():
             print(data['Open'])
             for x,y,z in zip(data['Open'],data['Close'],data['Volume']):
                 openList.append(round(x,2))
-                closeList.append(round(y,z))
+                closeList.append(round(y,2))
                 volumeList.append(z)
             print(openList,closeList,volumeList)
         except Exception as e:
