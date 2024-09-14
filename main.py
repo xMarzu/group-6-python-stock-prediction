@@ -7,6 +7,7 @@ import seaborn as sns; sns.set()
 stockList = ['MSFT','AAPL','KO']
 stockData = {}
 
+# Function to get basic chart of stocks in the list
 def getChart():
     for stockSymbol in stockList:
         try:
@@ -19,15 +20,22 @@ def getChart():
             plt.show()
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
-            
+
+# Retrieve data of each stock from yfinance, append into respective lists
 def getData():
     for stockSymbol in stockList:
         try:
-            data = yf.download(tickers=stockSymbol, period = '10y')
+            openList,closeList,volumeList = [],[],[]
+            data = yf.download(tickers=stockSymbol, period = '5d')
             print(data['Open'])
-            print(data['Close'])
-            print(data['Volume'])
+            for x,y,z in zip(data['Open'],data['Close'],data['Volume']):
+                openList.append(round(x,2))
+                closeList.append(round(y,z))
+                volumeList.append(z)
+            print(openList,closeList,volumeList)
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
 
+
+getChart()
 getData()
