@@ -83,3 +83,4 @@ def getData():
             print(openList,closeList,volumeList)
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
+
