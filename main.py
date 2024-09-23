@@ -7,7 +7,7 @@ import mplfinance as mpf
 from mplfinance.original_flavor import candlestick_ohlc
 import pandas as pd
 import matplotlib.dates as mpl_dates
-
+from flask import Flask, render_template
 # List to store stock data
 stockList = ['MSFT','AAPL','KO']
 stockData = {}
@@ -73,14 +73,21 @@ def getChart():
 def getData():
     for stockSymbol in stockList:
         try:
-            openList,closeList,volumeList = [],[],[]
-            data = yf.download(tickers=stockSymbol, period = '5d')
-            print(data['Open'])
-            for x,y,z in zip(data['Open'],data['Close'],data['Volume']):
-                openList.append(round(x,2))
-                closeList.append(round(y,2))
-                volumeList.append(z)
-            print(openList,closeList,volumeList)
+            data = yf.download(tickers=stockSymbol,period='10y')
+            # openList,closeList,volumeList = [],[],[]
+            # data = yf.download(tickers=stockSymbol, period = '5d')
+            # print(data['Open'])
+            # for x,y,z in zip(data['Open'],data['Close'],data['Volume']):
+            #     openList.append(round(x,2))
+            #     closeList.append(round(y,2))
+            #     volumeList.append(z)
+            # print(openList,closeList,volumeList)
+            # return {1: openList,2: closeList,3: volumeList}
+            return data
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
 
+app = Flask(__name__)
+@app.route("/")
+def main():
+    return getData()
