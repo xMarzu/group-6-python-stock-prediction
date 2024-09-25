@@ -7,6 +7,7 @@ import mplfinance as mpf
 from mplfinance.original_flavor import candlestick_ohlc
 import pandas as pd
 import matplotlib.dates as mpl_dates
+import os
 
 # List to store stock data
 stockList = ['MSFT','AAPL','KO']
@@ -83,4 +84,22 @@ def getData():
             print(openList,closeList,volumeList)
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
+
+def downloadCSV(ticker):
+    try:
+        #Download stock data from yfinance for the last 10 years
+        data = yf.download(tickers=ticker,period = '10y')
+
+        #Set download path for user's download folder
+        download_folder = os.path.expanduser('~/Downloads')
+        csv_file_path = os.path.join(download_folder, f'{ticker}_data.csv')
+
+        #Save the downloaded data into a CSV file
+        data.to_csv(csv_file_path)
+
+        print(f"Data for {ticker} saved to {csv_file_path}")
+
+    except:
+        print(f'Error downloading data for {ticker}')
+    
 
