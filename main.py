@@ -8,6 +8,9 @@ from mplfinance.original_flavor import candlestick_ohlc
 import pandas as pd
 import matplotlib.dates as mpl_dates
 import os
+from backtesting import Backtest, Strategy
+from backtesting.lib import crossover
+from backtesting.test import SMA
 
 # List to store stock data
 stockList = ['MSFT','AAPL','KO']
@@ -85,6 +88,7 @@ def getData():
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
 
+# Download CSV file containing stock data into users download folder
 def downloadCSV(ticker):
     try:
         #Download stock data from yfinance for the last 10 years
@@ -101,5 +105,45 @@ def downloadCSV(ticker):
 
     except:
         print(f'Error downloading data for {ticker}')
-    
+
+#SMA Crossover class 
+class smaCrossover(Strategy):
+    # Define default moving averages
+    averageShort = 50
+    averageLong = 200 
+
+    def init(self):
+        price = self.data.Close
+
+        # Calculate simple moving average
+        self.averageShort = self.I(SMA,price,self.averageShort)
+        self.averageLong = self.I(SMA,price,self.averageLong)
+
+    # Implement buy and sell logic based on SMA crossover
+    def next(self):
+        if crossover(self.averageShort,self.averageLong):
+            self.buy()
+        elif crossover(self.averageLong, self.averageShort):
+            self.sell()
+
+
+# Function to run backtest with SMA Crossover strategy based on user's input
+def backtestSmaCrossover(ticker,averageShort,averageLong):
+    try:
+        #Download stock data from yfinance for the last 10 years
+        data = yf.download(tickers=ticker,period = '10y')
+
+        # Initialize the backtest
+        bt = Backtest(data, smaCrossover, cash=10000, commission=0.002)
+
+        # Run the backtest with user's moving average
+        result = bt.run(averageShort=averageShort, averageLong=averageLong)
+
+        print(result)
+        bt.plot()
+
+    except:
+        print(f'Error downloading data for {ticker}')
+
+backtestSmaCrossover('AAPL',50,200)
 
