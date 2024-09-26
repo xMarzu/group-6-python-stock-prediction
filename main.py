@@ -18,7 +18,8 @@ stockData = {}
 
 # Math logic behind rsi indicator
 def calculate_rsi(data, period=14):
-    delta = data['Close'].diff()
+    close = pd.Series(data)  # Make sure we work with the correct series
+    delta = close.diff()
     gain = delta.where(delta > 0, 0)
     loss = -delta.where(delta < 0, 0)
 
@@ -85,6 +86,8 @@ def getData():
                 closeList.append(round(y,2))
                 volumeList.append(z)
             print(openList,closeList,volumeList)
+        
+
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
 
@@ -142,8 +145,58 @@ def backtestSmaCrossover(ticker,averageShort,averageLong):
         print(result)
         bt.plot()
 
-    except:
+    except Exception as e:
         print(f'Error downloading data for {ticker}')
+        print(e)
+
+class MacdRsiStrategy(Strategy):
+    short_ema_period = 12  # Short-term EMA for MACD
+    long_ema_period = 26    # Long-term EMA for MACD
+    signal_line_period = 9  # EMA for the signal line in MACD
+    rsi_period = 14         # Period for RSI calculation
+
+    def init(self):
+        # Convert closing prices into a Pandas Series
+        closing_prices = pd.Series(self.data.Close)
+
+        # Compute MACD values
+        short_ema = closing_prices.ewm(span=self.short_ema_period, adjust=False).mean()
+        long_ema = closing_prices.ewm(span=self.long_ema_period, adjust=False).mean()
+        macd_value = short_ema - long_ema
+        signal_value = macd_value.ewm(span=self.signal_line_period, adjust=False).mean()
+
+        # Store the computed MACD and signal values in the strategy instance
+        self.macd = self.I(lambda: macd_value)
+        self.signal = self.I(lambda: signal_value)
+
+        # Calculate RSI using the defined helper function
+        self.rsi_indicator = self.I(calculate_rsi, closing_prices, self.rsi_period)
+
+    def next(self):
+        # Define trading logic based on MACD crossovers and RSI levels
+        if crossover(self.macd, self.signal) and self.rsi_indicator[-1] < 70:
+            self.buy()
+        elif crossover(self.signal, self.macd) and self.rsi_indicator[-1] > 30:
+            self.sell()
+
+def backtest_macd_rsi(ticker_symbol):
+    try:
+        # Fetch historical stock data from Yahoo Finance for the past decade
+        historical_data = yf.download(tickers=ticker_symbol, period='10y')
+
+        # Create an instance of Backtest
+        backtest_instance = Backtest(historical_data, MacdRsiStrategy, cash=10000, commission=0.002)
+
+        # Execute the backtest
+        backtest_results = backtest_instance.run()
+
+        print(backtest_results)
+        backtest_instance.plot()
+
+    except Exception as error:
+        print(f'Error fetching data for {ticker_symbol}: {error}')
+
 
 backtestSmaCrossover('AAPL',50,200)
+backtest_macd_rsi('AAPL')
 
