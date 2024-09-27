@@ -13,8 +13,6 @@ dash.register_page(__name__, path_template="/stocks/<stock_id>")
 
 
 
-
-
 def layout(stock_id=None, **kwargs):
     
     @callback(
@@ -85,10 +83,25 @@ def layout(stock_id=None, **kwargs):
         [
             dcc.Location(id='url'),
             html.H1( children=[] ,id="stock-name"),
+            #Dropdown list
+            dbc.Col([
+            dbc.Label("Show time for :"),
+            dbc.Select(
+                id='dropdown',
+                options=[
+                    {'label': '1 Day', 'value': '1d' },
+                    {'label': 'Option 2', 'value': 'opt2'},
+                    {'label': 'Option 3', 'value': 'opt3'},
+                ],
+                value='opt1'  # default value
+            ),
+            html.Div(id='output-container'),
+            #Buttons List
             html.Div(
                 [
                     html.Div(
                         [
+                            
                             dbc.Button(children=["1 Day"], color="light", class_name="me-1", value="1d", id={"type" : "line-button", "index" : 1, "value": "1d"}),
                             dbc.Button(children=["5 Days"], color="light", class_name="me-1", value="5d",  id={"type" : "line-button", "index" : 2, "value": "5d"}),   
                             dbc.Button(children=["1 Month"], color="light", class_name="me-1", value="1mo", id={"type" : "line-button", "index" : 3, "value": "1mo"}),   
@@ -107,8 +120,9 @@ def layout(stock_id=None, **kwargs):
                 [
                     dcc.Graph(figure={}, id="stock-candlestick-graph")
                 ]
-            )
-           
+            ),
+            
+            ])
         ]
         
     )
