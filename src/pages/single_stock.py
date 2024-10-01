@@ -7,7 +7,12 @@ import plotly.express as px
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 
+# Define the stock ticker
+ticker_symbol = "AAPL"
 
+# Get the stock data
+stock_data = yf.Ticker(ticker_symbol)
+stock_data = stock_data.info
 
 dash.register_page(__name__, path_template="/stocks/<stock_id>")
 
@@ -121,7 +126,13 @@ def layout(stock_id=None, **kwargs):
                     dcc.Graph(figure={}, id="stock-candlestick-graph")
                 ]
             ),
-            
+            html.Div(
+                f'This is our Stocks single page news about this {stock_data["website"]}.'
+                
+            ),
+            html.Div(
+                'This is our Stocks single page .'
+            )
             ])
         ]
         
