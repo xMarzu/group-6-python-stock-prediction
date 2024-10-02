@@ -10,6 +10,6 @@ It is called z_overview as we want this to be the last page rendered after all t
 dash.register_page(__name__, path_template="/stocks/<stock_id>")
 def layout(stock_id=None, **kwargs):
     return(
-        stock_base_layout(),
+        stock_base_layout(stock_id),
         html.P("Overview")
     )

@@ -6,6 +6,7 @@ import plotly.express as px
 import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from src.components.stock.base.header_layout import header_layout
+from src.components.stock.base.stock_tabs import stock_tabs
 import yfinance as yf
 '''
 This file contains the base layout of all single stock pages. 
@@ -14,7 +15,7 @@ This file contains the base layout of all single stock pages.
 #Whatever needs to be fetched, fetch and store in dcc store for other components to access
 @callback (Output("header-store", "data"), Input("url","pathname"))
 def fetch_layout_data(url : str):
-        ##Fetches Name and current close pricings -> for name price layout
+        #Fetches Name and current close pricings -> for name price layout
         def fetch_header_data(ticker):
             
             #To get the percentage increase and difference, get the previous close and subtract
@@ -47,18 +48,25 @@ def fetch_layout_data(url : str):
 
 
 
-def stock_base_layout():
-    '''
-    This function will return the stock base layout used in all nested stock pages
-    '''
+def stock_base_layout(stock_id : str):
+    """ Generates stock base layout
+
+    Args:
+        stock_id (str): id of stock
+
+  
+    """
+
     return (
         
         html.Div(
             [
                 dcc.Location(id="url"),
-                header_layout()
+                header_layout(),
+                stock_tabs(stock_id=stock_id)
                 
-            ],
+    
+            ], className = "flex flex-col gap-4 mt-8"
             
            
         )

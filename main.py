@@ -111,7 +111,12 @@ app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP]
 
 app.layout = html.Div([
     navbar(),
-    dash.page_container,
+    html.Div(
+        [
+            dash.page_container,
+        ],className = "px-4"
+    ),
+    
    
     
 ], className="bg-[#F1F1F1]")
