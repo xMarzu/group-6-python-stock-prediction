@@ -86,7 +86,6 @@ def getData():
                 closeList.append(round(y,2))
                 volumeList.append(z)
             print(openList,closeList,volumeList)
-        
 
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
@@ -109,32 +108,65 @@ def downloadCSV(ticker):
     except:
         print(f'Error downloading data for {ticker}')
 
-#SMA Crossover class 
-class smaCrossover(Strategy):
-    # Define default moving averages
-    averageShort = 50
+# Update the SMA Crossover class to check for stop loss and take profit before selling
+class smaCrossover(Strategy): 
+    averageShort = 50 
     averageLong = 200 
+    takeProfit = None 
+    stopLoss = None 
+    buyAmount = None 
+    entryPrice = None  # Initialize entryPrice
 
-    def init(self):
-        price = self.data.Close
-
-        # Calculate simple moving average
-        self.averageShort = self.I(SMA,price,self.averageShort)
-        self.averageLong = self.I(SMA,price,self.averageLong)
-
-    # Implement buy and sell logic based on SMA crossover
-    def next(self):
-        if crossover(self.averageShort,self.averageLong):
-            self.buy()
-        elif crossover(self.averageLong, self.averageShort):
-            self.sell()
+    def init(self): 
+        price = self.data.Close 
+        # Calculate moving averages 
+        self.averageShort = self.I(SMA, price, self.averageShort) 
+        self.averageLong = self.I(SMA, price, self.averageLong) 
+ 
+    def next(self): 
+        price = self.data.Close[-1]  # Current price 
+         
+        # If there's no position, check for a crossover to buy 
+        if not self.position: 
+            if crossover(self.averageShort, self.averageLong): 
+                if self.buyAmount is not None: 
+                    # Determine size based on cash or fixed amount 
+                    if self.buyAmount <= 1: 
+                        cash = self.broker.cash 
+                        size = (cash * self.buyAmount) / price 
+                    else: 
+                        size = self.buyAmount 
+                     
+                    self.buy(size=size)  # Place buy order 
+                    self.entryPrice = price  # Set entry price after buying 
+                    print(f'Bought at {self.entryPrice}') 
+ 
+        # If there's a position, check stop loss and take profit 
+        elif self.position: 
+            if self.entryPrice is not None and self.takeProfit is not None and self.stopLoss is not None: 
+                # Calculate take profit and stop loss price levels 
+                takeProfitPrice = self.entryPrice * (1 + self.takeProfit) 
+                stopLossPrice = self.entryPrice * (1 - self.stopLoss)
+                
+                # Check if current price hits take profit or stop loss levels
+                if price >= takeProfitPrice:
+                    self.sell(size=self.position.size)  # Sell all
+                    print(f'Sold at {price} for take profit')
+                elif price <= stopLossPrice:
+                    self.sell(size=self.position.size)  # Sell all
+                    print(f'Sold at {price} for stop loss')
 
 
 # Function to run backtest with SMA Crossover strategy based on user's input
-def backtestSmaCrossover(ticker,averageShort,averageLong):
+def backtestSmaCrossover(ticker,averageShort,averageLong,takeProfit,stopLoss,buyAmount):
     try:
         #Download stock data from yfinance for the last 10 years
         data = yf.download(tickers=ticker,period = '10y')
+
+        # Update SMA Strategy class with user-defined buy size,take profit and stoploss
+        smaCrossover.takeProfit = takeProfit
+        smaCrossover.stopLoss = stopLoss
+        smaCrossover.buyAmount = buyAmount
 
         # Initialize the backtest
         bt = Backtest(data, smaCrossover, cash=10000, commission=0.002)
@@ -214,7 +246,5 @@ def backtestRsi(ticker):
         print(f'Error fetching data for {ticker}: {e}')
 
 # Example usage
-backtestSmaCrossover('AAPL', 50, 200)
-backtestMacdRsi('AAPL')
-backtestRsi('AAPL')
-
+backtestSmaCrossover('AAPL', averageShort=3, averageLong=20, takeProfit=0.1, stopLoss=0.05, buyAmount=10)
+# backtestMacdRsi('AAPL')
