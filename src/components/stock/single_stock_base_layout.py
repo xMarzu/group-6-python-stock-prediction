@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objects as go
 from src.components.stock.base.header_layout import header_layout
 from src.components.stock.base.stock_tabs import stock_tabs
+from src.components.stock.stock_layout_functions import get_stock_id_from_url
 import yfinance as yf
 '''
 This file contains the base layout of all single stock pages. 
@@ -38,7 +39,7 @@ def fetch_layout_data(url : str):
         
             return header_dic
         ##Get stock ID based on the URL
-        stock_id = url.split("/")[2]
+        stock_id = get_stock_id_from_url(url)
         ##Current ticker
         ticker = yf.Ticker(stock_id)
         header = fetch_header_data(ticker=ticker)

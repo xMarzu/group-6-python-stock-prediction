@@ -37,7 +37,7 @@ def assign_headers(data):
     print("Fetching header data: ", data)
     stock_name = data["stock_name"]
     stock_id = data["stock_id"]
-    close_price = data["close"]
+    close_price = f'{data["close"]:.3f}'
     stock_difference =  data["difference"]
     if (stock_difference > 0):
         stock_difference = f"+{stock_difference:.2f}"
