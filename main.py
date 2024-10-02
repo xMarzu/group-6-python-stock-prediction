@@ -18,7 +18,6 @@ import requests
 
 
 
-
 # List to store stock data
 stockList = ['MSFT','AAPL','KO']
 stockData = {}
@@ -100,22 +99,24 @@ def getData():
 
 
 
-    
-    
+external_scripts = [
 
 
+    {'src': 'https://cdn.tailwindcss.com'}
 
-app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP], pages_folder="src/pages")
+]
+app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP], pages_folder="src/pages" , external_scripts=external_scripts)
 
 
 
 app.layout = html.Div([
-    navbar,
-    dash.page_container
+    navbar(),
+    dash.page_container,
+   
     
-])
+], className="bg-[#F1F1F1]")
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug = True)
 
