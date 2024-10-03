@@ -1,3 +1,4 @@
+import os
 import yfinance as yf
 import nsepy
 from nsepy import get_history
@@ -11,10 +12,35 @@ import os
 from backtesting import Backtest, Strategy
 from backtesting.lib import crossover
 from backtesting.test import SMA
+from flask import Flask, render_template
+import plotly.express as px
+from dash import Dash, dcc, html, Input, Output, callback
+import dash
+import dash_bootstrap_components as dbc
+from src.components.navbar import navbar
+import requests
 
-# List to store stock data
-stockList = ['MSFT','AAPL','KO']
-stockData = {}
+
+
+
+external_scripts = [
+    {'src': 'https://cdn.tailwindcss.com'}    
+]
+
+app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP], pages_folder="src/pages" , external_scripts=external_scripts)
+app.layout = html.Div([
+    navbar(),
+    html.Div(
+        [
+            dash.page_container,
+        ],className = "px-4"
+    ),
+    
+   
+    
+], className="bg-[#F1F1F1]")
+if __name__ == "__main__":
+    app.run_server(debug = True)
 
 # Math logic behind rsi indicator
 def calculate_rsi(data, period=14):
@@ -23,14 +49,8 @@ def calculate_rsi(data, period=14):
     gain = delta.where(delta > 0, 0)
     loss = -delta.where(delta < 0, 0)
 
-    avg_gain = gain.rolling(window=period, min_periods=1).mean()
-    avg_loss = loss.rolling(window=period, min_periods=1).mean()
-
-    rs = avg_gain / avg_loss
-    rsi = 100 - (100 / (1 + rs))
-
-    return rsi
-
+stockList = ['MSFT','AAPL','KO']
+stockData = {}
 # Get candlestick chart 
 def getCandlestickChart():
     for stockSymbol in stockList:
@@ -54,6 +74,7 @@ def getCandlestickChart():
 
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
+
 
 # Function to get basic chart of stocks in the list
 def getChart():
