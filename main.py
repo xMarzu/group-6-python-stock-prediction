@@ -52,7 +52,7 @@ def getCandlestickChart():
             data['RSI'] = calculate_rsi(data)
             rsi_addplot = mpf.make_addplot(data['RSI'], panel=1, color='blue', secondary_y=True)
             
-            # Plot the candlestick chart using mplfinance
+            # Plot the candlestick chart ux mplfinance
             mpf.plot(data, type='candle', addplot=[rsi_addplot], mav=200, volume=True, style='charles', 
                      title=f"Candlestick Chart of {stockSymbol}", ylabel='Price', 
                      ylabel_lower='Volume', figsize=(14, 7))
