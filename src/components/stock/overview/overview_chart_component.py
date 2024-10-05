@@ -51,6 +51,13 @@ def store_chart_data(url: str, buttons):
     
 
 def generate_chart_component():
+    
+    base_chart = go.Figure()
+    base_chart.update_layout(
+    plot_bgcolor='#F1F1F1',  # Plot area background color
+    paper_bgcolor='#F1F1F1',  # Overall figure background color
+    font=dict(color="black"),  # Font color for labels and text
+    )
     return(
         html.Div(
             [
@@ -67,6 +74,8 @@ def generate_chart_component():
                 ),
                 html.Div(
                     [
+                    
+                        dcc.Graph(figure=base_chart)
 
                     ], className="grow", id="graph-container"
                 ),
