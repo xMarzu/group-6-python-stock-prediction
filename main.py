@@ -30,7 +30,7 @@ external_scripts = [
     {'src': 'https://cdn.tailwindcss.com'}    
 ]
 
-app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP], pages_folder="src/pages" , external_scripts=external_scripts)
+app = Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP], pages_folder="src/pages" , external_scripts=external_scripts, suppress_callback_exceptions=True)
 app.layout = html.Div([
     navbar(),
     html.Div(
