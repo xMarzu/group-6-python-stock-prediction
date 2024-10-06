@@ -9,9 +9,11 @@ def plot_candlestick(candlestick_data, trades_data):
         close=candlestick_data['Close'],
         name="Candlestick"
     )])
+    
+    trades_with_data = trades_data.dropna(subset=['ReturnPct'])
    # Separate trades into profits and losses
-    profits = trades_data[trades_data['ReturnPct'] > 0]
-    losses = trades_data[trades_data['ReturnPct'] <= 0]
+    profits = trades_with_data[trades_data['ReturnPct'] > 0]
+    losses = trades_with_data[trades_data['ReturnPct'] <= 0]
 
     # Initialize flags for legend tracking
     profit_legend_added = False

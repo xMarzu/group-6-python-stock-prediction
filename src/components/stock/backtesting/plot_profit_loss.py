@@ -16,25 +16,36 @@ def plot_profit_loss( trades):
     
 
  
-    # Initialize the figure
-    fig = go.Figure()
-    entry_dates = trades["EntryTime"]
-    exit_dates = trades["ExitTime"]
-    return_pct = trades['ReturnPct'] * 100
+     # Ensure the x-axis includes all dates from the dataset
+    all_dates = trades["Date"]
     
+    # Filter out rows where trade data (like EntryPrice, PnL, ReturnPct) is missing
+    trades_with_data = trades.dropna(subset=['ReturnPct'])
+
+    # Extract data for plotting
+    entry_dates = trades_with_data["Date"]
+    return_pct = trades_with_data['ReturnPct'] * 100
+    
+    # Determine the color for each point based on ReturnPct (green for positive, red for negative)
     entry_colors = ['green' if pct > 0 else 'red' for pct in return_pct]
 
+    # Initialize the figure
+    fig = go.Figure()
+
+    # Set the x-axis to display all the dates, even if no trades occur on some of them
+    fig.update_xaxes(type='date', range=[all_dates.min(), all_dates.max()])
+
+    # Add scatter plot for trade entries
     fig.add_trace(go.Scatter(
-    x=entry_dates, 
-    y=return_pct,
-    mode='markers',
-    name='Entry Returns',
-    marker=dict(color=entry_colors, size=10),
-    text=return_pct,  # Display return percentage on hover
-    hovertemplate='P/L: %{text:.2f}%<br>Date: %{x}<extra></extra>'
-))
+        x=entry_dates, 
+        y=return_pct,
+        mode='markers',
+        name='Entry Returns',
+        marker=dict(color=entry_colors, size=10),
+        text=return_pct,  # Display return percentage on hover
+        hovertemplate='P/L: %{text:.2f}%<br>Date: %{x}<extra></extra>'
+    ))
 
-
-    return fig 
+    return fig
 
 
