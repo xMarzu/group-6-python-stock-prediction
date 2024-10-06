@@ -2,9 +2,13 @@
 import os
 import requests
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
+
 
 # Load environment variables from .env file
 load_dotenv()
+
+
 
 # Function to fetch stock news from Alpha Vantage API
 def fetch_stock_news(ticker):
@@ -36,11 +40,11 @@ def format_stock_news(news_data):
         print("There are no news data available.")
         return
     
-    print(f"Total Articles: {news_data.get('items')}")
-    print(f"Sentiment Score Definitions: {news_data.get('sentiment_score_definition')}")
-    print(f"Relevance Score Definitions: {news_data.get('relevance_score_definition')}")
-    print("\n--- Latest Stock News ---\n")
-    
+        # print(f"Total Articles: {news_data.get('items')}")
+        # print(f"Sentiment Score Definitions: {news_data.get('sentiment_score_definition')}")
+        # print(f"Relevance Score Definitions: {news_data.get('relevance_score_definition')}")
+        # print("\n--- Latest Stock News ---\n")
+    article_list = []
     for article in news_data.get('feed', []):
         title = article['title']
         url = article['url']
@@ -50,27 +54,33 @@ def format_stock_news(news_data):
         summary = article.get('summary', 'No summary available.')
         sentiment_label = article['overall_sentiment_label']
         sentiment_score = article['overall_sentiment_score']
-        
-        # Print the news article
-        print(f"Title: {title}")
-        print(f"URL: {url}")
-        print(f"Published on: {time_published}")
-        print(f"Authors: {authors}")
-        print(f"Source: {source}")
-        print(f"Summary: {summary}")
-        print(f"Sentiment Label: {sentiment_label}")
-        print(f"Sentiment Score: {sentiment_score}")
-        print("\n")
+       
+        article_dict = {"title" : title, "url" : url, "source" : source, "summary" : summary, "sentiment_label" : sentiment_label, "sentiment_score" : sentiment_score}
+        article_list.append(article_dict)
+        # # Print the news article
+        # print(f"Title: {title}")
+        # print(f"URL: {url}")
+        # print(f"Published on: {time_published}")
+        # print(f"Authors: {authors}")
+        # print(f"Source: {source}")
+        # print(f"Summary: {summary}")
+        # print(f"Sentiment Label: {sentiment_label}")
+        # print(f"Sentiment Score: {sentiment_score}")
+        # print("\n")
+    return article_list
+
+
 
 # Main function to run the program
-def main():
-    ticker = input("Enter the stock symbol (e.g., AAPL, TSLA): ")
+def get_stock_news(ticker):
+    # ticker = input("Enter the stock symbol (e.g., AAPL, TSLA): ")
     
     # Fetch the news data
     stock_news_data = fetch_stock_news(ticker)
     
     # Format and display the news data
-    format_stock_news(stock_news_data)
+    article_list = format_stock_news(stock_news_data)
+    return article_list
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

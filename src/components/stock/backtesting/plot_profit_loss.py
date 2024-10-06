@@ -4,7 +4,7 @@ from pandas import DataFrame
 from datetime import timedelta
 import pandas as pd
 
-def plot_profit_loss(equity_curve : DataFrame, trades):
+def plot_profit_loss( trades):
     """Creates an profit/loss graph based on the equity data given
 
     Args:

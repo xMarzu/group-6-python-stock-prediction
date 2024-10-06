@@ -55,6 +55,8 @@ def backtestSmaCrossover(ticker,averageShort,averageLong,takeProfit,stopLoss,buy
     try:
         #Download stock data from yfinance for the last 10 years
         data = yf.download(tickers=ticker,period = '10y')
+       
+        
 
         # Update SMA Strategy class with user-defined buy size,take profit and stoploss
         smaCrossover.takeProfit = takeProfit
@@ -66,20 +68,25 @@ def backtestSmaCrossover(ticker,averageShort,averageLong,takeProfit,stopLoss,buy
 
         # Run the backtest with user's moving average
         result = bt.run(averageShort=averageShort, averageLong=averageLong)
+        data = data.reset_index()
 
-        # resultsDict = {
-        #     "Trades": result['_trades'],
-        #     'Total Return': result['Return [%]'],
-        #     'Max Drawdow':result['Max. Drawdown [%]'],
-        #     'Avg Trade Duration': result['Avg. Trade Duration'],
-        #     'Win Rate': result['Win Rate [%]'],
-        #     'Total Trades': result['# Trades'],
-        # }
+       
+        resultsDict = {
+            "Trades": result['_trades'],
+            'Total Return': result['Return [%]'],
+            'Max Drawdow':result['Max. Drawdown [%]'],
+            'Avg Trade Duration': result['Avg. Trade Duration'],
+            'Win Rate': result['Win Rate [%]'],
+            'Total Trades': result['# Trades'],
+            "Equity Curve": result["_equity_curve"],
+            "Candlestick" : data[["Date", "Open", "High", "Low", "Close", "Volume"]]
+            
+        }
         
 
         # bt.plot()
-
-        return result
+     
+        return resultsDict
 
     except Exception as e:
         print(f'Error downloading data for {ticker}')

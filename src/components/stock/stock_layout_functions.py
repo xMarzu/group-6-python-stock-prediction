@@ -23,13 +23,29 @@ def get_stock_data(ticker: str, period : str):
   
   
 
-# Math logic behind rsi indicator
 def calculate_rsi(data, period=14):
-    close = pd.Series(data)  # Make sure we work with the correct series
+    # Ensure data is a pandas Series
+    close = pd.Series(data)
+    
+    # Calculate price differences
     delta = close.diff()
+    
+    # Separate gains and losses
     gain = delta.where(delta > 0, 0)
     loss = -delta.where(delta < 0, 0)
 
+    # Calculate the average gain and average loss
+    avg_gain = gain.rolling(window=period).mean()
+    avg_loss = loss.rolling(window=period).mean()
+
+    # Calculate the relative strength (RS)
+    rs = avg_gain / avg_loss
+
+    # Calculate the RSI
+    rsi = 100 - (100 / (1 + rs))
+
+    # Return the RSI, ensuring the output has the same length as the input
+    return rsi.fillna(0)  # Fill NaN values with 0 for better compatibility
 # Get candlestick chart 
 def getCandlestickChart():
     stockList = ['MSFT','AAPL','KO']

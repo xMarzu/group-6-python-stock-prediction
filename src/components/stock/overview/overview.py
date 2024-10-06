@@ -1,4 +1,5 @@
 from dash import html, callback, Output,  Input, dcc,ctx, ALL
+from src.components.stock.overview.overview_stock_news import generate_stock_news
 from src.components.stock.stock_layout_functions import get_stock_id_from_url
 from src.components.stock.overview.overview_indicators import generate_overview_indicators
 from src.components.stock.overview.overview_chart_component import generate_chart_component
@@ -21,9 +22,16 @@ def overview_layout(stock_id : str):
                 html.Div(
                     [
                         generate_overview_indicators(stock_id=stock_id),
-                        generate_chart_component()
+                        generate_chart_component(),
+                        
+                        
                          
                     ],className="flex gap-8"
+                ),
+                html.Div(
+                    [
+                        generate_stock_news()
+                    ]
                 )
                 
             ]
