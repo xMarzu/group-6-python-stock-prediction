@@ -16,7 +16,7 @@ dash.register_page(__name__, path_template="/stocks/<stock_id>/backtesting")
 
 
 
-@callback([Output("equity-figure","figure"), Output("profit-loss-figure","figure"),Output("candlestick-figure","figure"), Output("volume-figure","figure"),Output("subplot-figure","figure")], [Input("run-backtest", "n_clicks"), Input("url","pathname")])
+@callback(Output("subplot-figure","figure"), [Input("run-backtest", "n_clicks"), Input("url","pathname")])
 def runSMA(n_clicks, url):
 
 
@@ -26,13 +26,14 @@ def runSMA(n_clicks, url):
             rows=4, cols=1,
             shared_xaxes=True,
             subplot_titles=("Equity Curve", "Profit/Loss", "Candlestick Chart", "Volume Chart"),
-            vertical_spacing=0.1,
+            vertical_spacing=0.03,
          )
       
       # Define layout
       layout = dict(
          title="Backtesting",
          hovermode="x unified",
+         
         
       )
       
@@ -54,11 +55,11 @@ def runSMA(n_clicks, url):
       # plot_equity(equity_curve=equity_curve , main_fig=fig)
       plot_equity(equity_curve=equity_curve, main_fig= fig)
       plot_profit_loss(trades=filtered_trade,  main_fig= fig)
-      candlestick_fig = plot_candlestick(candlestick, filtered_trade)
-      volume_fig = plot_volume(candlestick_data=candlestick)
+      plot_candlestick(candlestick, filtered_trade, fig)
+      plot_volume(candlestick_data=candlestick, main_fig=fig)
       
       fig.update_layout(layout)
-      return fig, fig,candlestick_fig, volume_fig, fig
+      return fig
    
    
    
@@ -80,10 +81,7 @@ def layout(stock_id=None, **kwargs):
       stock_base_layout(stock_id),
       html.Button("Run Backtest", id="run-backtest", n_clicks=0),
       dcc.Graph(id = "subplot-figure",  style={'height': '1500px'}),
-      dcc.Graph(id ="equity-figure"),
-      dcc.Graph(id = "profit-loss-figure"),
-      dcc.Graph(id= "candlestick-figure"),
-      dcc.Graph(id = "volume-figure")
+
  
       #  backtestSmaCrossover('AAPL', averageShort=7, averageLong=200, takeProfit=0.1, stopLoss=0.05, buyAmount=10)
     )

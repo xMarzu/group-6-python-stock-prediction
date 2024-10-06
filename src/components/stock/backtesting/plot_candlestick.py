@@ -1,19 +1,20 @@
 import plotly.graph_objs as go
 
-def plot_candlestick(candlestick_data, trades_data):
-    fig = go.Figure(data=[go.Candlestick(
-        x=candlestick_data['Date'],
-        open=candlestick_data['Open'],
-        high=candlestick_data['High'],
-        low=candlestick_data['Low'],
-        close=candlestick_data['Close'],
-        name="Candlestick"
-    )])
-    
+def plot_candlestick(candlestick_data, trades_data,main_fig):
+# Add the candlestick trace to the specific subplot (row 3, col 1)
+    main_fig.add_trace(go.Candlestick(
+            x=candlestick_data['Date'],
+            open=candlestick_data['Open'],
+            high=candlestick_data['High'],
+            low=candlestick_data['Low'],
+            close=candlestick_data['Close'],
+            name="Candlestick"
+        ), row=3, col=1)
+
+    # Prepare trades with data and separate them into profits and losses
     trades_with_data = trades_data.dropna(subset=['ReturnPct'])
-   # Separate trades into profits and losses
-    profits = trades_with_data[trades_data['ReturnPct'] > 0]
-    losses = trades_with_data[trades_data['ReturnPct'] <= 0]
+    profits = trades_with_data[trades_with_data['ReturnPct'] > 0]
+    losses = trades_with_data[trades_with_data['ReturnPct'] <= 0]
 
     # Initialize flags for legend tracking
     profit_legend_added = False
@@ -35,8 +36,8 @@ def plot_candlestick(candlestick_data, trades_data):
             high_price_during_trade = candlestick_data.loc[mask, 'High'].max()
             low_price_during_trade = candlestick_data.loc[mask, 'Low'].min()
 
-            # Add scatter plot for shaded area between entry and exit
-            fig.add_trace(go.Scatter(
+            # Add scatter plot for shaded area between entry and exit in the specific subplot
+            main_fig.add_trace(go.Scatter(
                 x=[entry_date, exit_date, exit_date, entry_date, entry_date],
                 y=[low_price_during_trade, low_price_during_trade, high_price_during_trade, high_price_during_trade, low_price_during_trade],
                 fill="toself",
@@ -47,7 +48,7 @@ def plot_candlestick(candlestick_data, trades_data):
                 legendgroup=legend_group,  # Group by profit or loss
                 showlegend=not (profit_legend_added if is_profitable else loss_legend_added),
                 hoverinfo="skip"  # This avoids displaying hover info for these shapes
-            ))
+            ), row=3, col=1)  # Specify subplot here
 
             # Update the flag to indicate that the legend for this category has been added
             if is_profitable:
@@ -55,12 +56,14 @@ def plot_candlestick(candlestick_data, trades_data):
             else:
                 loss_legend_added = True
 
-    # Customize layout
-    fig.update_layout(
+    main_fig.update_xaxes(rangeslider_visible=False, row=3, col=1)
+        # Customize layout
+        # main_fig.update_layout(
 
-        xaxis_title="Date",
-        yaxis_title="Price",
-        xaxis_rangeslider_visible=False,
-        legend_title="Trades"
-    )
-    return fig
+        #     xaxis_title="Date",
+        #     yaxis_title="Price",
+        #     xaxis_rangeslider_visible=False,
+        #     legend_title="Trades",
+        #     row =3 ,
+        #     col = 1
+        # )
