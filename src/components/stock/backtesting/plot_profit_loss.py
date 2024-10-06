@@ -4,7 +4,7 @@ from pandas import DataFrame
 from datetime import timedelta
 import pandas as pd
 
-def plot_profit_loss( trades):
+def plot_profit_loss( trades, main_fig):
     """Creates an profit/loss graph based on the equity data given
 
     Args:
@@ -16,8 +16,7 @@ def plot_profit_loss( trades):
     
 
  
-     # Ensure the x-axis includes all dates from the dataset
-    all_dates = trades["Date"]
+
     
     # Filter out rows where trade data (like EntryPrice, PnL, ReturnPct) is missing
     trades_with_data = trades.dropna(subset=['ReturnPct'])
@@ -29,14 +28,12 @@ def plot_profit_loss( trades):
     # Determine the color for each point based on ReturnPct (green for positive, red for negative)
     entry_colors = ['green' if pct > 0 else 'red' for pct in return_pct]
 
-    # Initialize the figure
-    fig = go.Figure()
-
-    # Set the x-axis to display all the dates, even if no trades occur on some of them
-    fig.update_xaxes(type='date', range=[all_dates.min(), all_dates.max()])
+   
+    # # Set the x-axis to display all the dates, even if no trades occur on some of them
+    # main_fig.update_xaxes(type='date', range=[all_dates.min(), all_dates.max()])
 
     # Add scatter plot for trade entries
-    fig.add_trace(go.Scatter(
+    main_fig.add_trace(go.Scatter(
         x=entry_dates, 
         y=return_pct,
         mode='markers',
@@ -44,8 +41,8 @@ def plot_profit_loss( trades):
         marker=dict(color=entry_colors, size=10),
         text=return_pct,  # Display return percentage on hover
         hovertemplate='P/L: %{text:.2f}%<br>Date: %{x}<extra></extra>'
-    ))
+    ), row=2, col=1)
 
-    return fig
+    
 
 
