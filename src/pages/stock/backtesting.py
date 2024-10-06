@@ -1,5 +1,7 @@
 import dash
 from dash import html, callback, Output,  Input, dcc,ctx, ALL
+from src.components.stock.backtesting.rsi import backtestRsi
+from src.components.stock.backtesting.macd_rsi import backtestMacdRsi
 from src.components.stock.backtesting.plot_candlestick import plot_candlestick
 from src.components.stock.backtesting.plot_volume import plot_volume
 from src.components.stock.backtesting.plot_profit_loss import plot_profit_loss
@@ -40,7 +42,9 @@ def runSMA(n_clicks, url):
 
       stock_id = get_stock_id_from_url(url)
       buy_amount = 10
-      stats = backtestSmaCrossover(stock_id, averageShort=7, averageLong=200, takeProfit=0.1, stopLoss=0.05, buyAmount=buy_amount)
+      # stats = backtestSmaCrossover(stock_id, averageShort=7, averageLong=200, takeProfit=0.1, stopLoss=0.05, buyAmount=buy_amount)
+      # stats = backtestMacdRsi(stock_id, takeProfit=0.1, stopLoss=0.05, buyAmount=10)
+      stats = backtestRsi(stock_id, takeProfit=0.1, stopLoss=0.05, buyAmount=10)
       equity_curve = stats['Equity Curve']
       trades = stats["Trades"]
       candlestick = stats["Candlestick"]

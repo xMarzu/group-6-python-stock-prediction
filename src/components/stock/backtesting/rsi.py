@@ -61,6 +61,8 @@ def backtestRsi(ticker,takeProfit,stopLoss,buyAmount):
         bt = Backtest(data, RSI, cash=10000, commission=0.002)
 
         result = bt.run()
+        data = data.reset_index()
+
 
         resultsDict = {
             "Trades": result['_trades'],
@@ -69,9 +71,10 @@ def backtestRsi(ticker,takeProfit,stopLoss,buyAmount):
             'Avg Trade Duration': result['Avg. Trade Duration'],
             'Win Rate': result['Win Rate [%]'],
             'Total Trades': result['# Trades'],
+            "Equity Curve": result["_equity_curve"],
+            "Candlestick" : data[["Date", "Open", "High", "Low", "Close", "Volume"]]
         }
 
-        bt.plot()
         
         return resultsDict
 
