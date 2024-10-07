@@ -1,91 +1,88 @@
 import dash
-from dash import dcc, html, Input, Output, dash_table
+from dash import html, dcc, callback, Output, Input
 import plotly.graph_objs as go
-import plotly.express as px
+from src.components.stock.single_stock_base_layout import stock_base_layout
+from linearRegression import download_stock_data, preprocess_data, split_data, train_model
+import numpy as np
+from sklearn.metrics import r2_score
 import pandas as pd
-import yfinance as yf
-import nsepy
-from nsepy import get_history
-from datetime import date
-import matplotlib.pyplot as plt
-import mplfinance as mpf
-from mplfinance.original_flavor import candlestick_ohlc
-import matplotlib.dates as mpl_dates
-from flask import Flask, render_template
-import plotly.graph_objs as go
 
-# Sample data
-data = {
-    'x': [1, 2, 3, 4, 5],
-    'y1': [2, 3, 5, 7, 11],
-    'y2': [1, 2, 4, 8, 16],
-    'y3': [5, 3, 4, 2, 1],
-}
+dash.register_page(__name__, path_template="/stocks/<stock_id>/prediction")
 
-# Create a DataFrame
-df = pd.DataFrame(data)
+def layout(stock_id=None, **kwargs):
+    return html.Div([
+        stock_base_layout(stock_id),
+        html.H3("Stock Price Prediction"),
+        dcc.Input(id='days-to-predict', type='number', value=1, min=1, step=1),
+        html.Button('Predict', id='predict-button', n_clicks=0),
+        dcc.Graph(id='prediction-graph'),
+    ])
 
-# Define line labels
-line_labels = ['Line 1', 'Line 2', 'Line 3']
-y_columns = ['y1', 'y2', 'y3']
+def start_predict(stock_id, days_to_predict):
+    # Main Execution - Download stock data
+    ticker = "MMM"
+    start_date = '2014-01-01'
+    end_date = '2024-09-17'
+    stock_data, dates = download_stock_data(ticker, start_date, end_date)
 
-# Initialize the Dash app
-app = dash.Dash(__name__)
+    # Preprocess data - Creates sequences of 10 days of stock prices, target on the 11th day
+    sequence_length = 10
+    data_sequences = preprocess_data(stock_data, dates, sequence_length)
 
-# Layout of the app
-app.layout = html.Div(children=[
-    html.H1(children='Interactive Line Graph with Search'),
+    # Split data into training and testing sets
+    train_data, test_data = split_data(data_sequences)
 
-    dcc.Input(
-        id='search-bar',
-        type='text',
-        placeholder='Search for line (Line 1, Line 2, Line 3)...',
-        style={'margin-bottom': '20px'}
-    ),
+    # Prepare training data
+    X_train = np.array([item[0] for item in train_data])
+    y_train = np.array([item[1] for item in train_data])
 
-    dcc.Graph(id='line-graph'),
+    # Train linear regression model
+    model = train_model(X_train, y_train)
 
-    html.Div(id='output-message')
-])
+    # Prepare the last sequence for future predictions
+    last_sequence = stock_data[-sequence_length:].values.reshape(1, -1)
 
-# Callback to update the graph based on the search input
-@app.callback(
-    Output('line-graph', 'figure'),
-    Output('output-message', 'children'),
-    Input('search-bar', 'value')
-)
-def update_graph(search_value):
-    # Create a figure object
-    figure = go.Figure()
+    # Predict future prices
+    future_predictions = []
+    for _ in range(days_to_predict):
+        # Predict the next price
+        next_price = model.predict(last_sequence)[0]
+        future_predictions.append(next_price)
 
-    # Determine which lines to include based on the search input
-    if search_value:
-        filtered_labels = [label for label in line_labels if search_value.lower() in label.lower()]
-    else:
-        filtered_labels = line_labels
+        # Update the last_sequence for the next prediction
+        last_sequence = np.append(last_sequence[:, 1:], next_price).reshape(1, -1)
 
-    # Add traces for the selected lines
-    for i, label in enumerate(filtered_labels):
-        figure.add_trace(go.Scatter(
-            x=df['x'],
-            y=df[y_columns[i]],
-            mode='lines+markers',
-            name=label
-        ))
+    # Prepare data for the graph
+    actual_prices = [item[1] for item in test_data]
+    prediction_dates = [item[2] for item in test_data]
+    future_dates = pd.date_range(start=prediction_dates[-1] + pd.Timedelta(days=1), periods=days_to_predict)
+
+    # Calculate R-squared score
+    y_test = np.array([item[1] for item in test_data])
+    y_pred = model.predict(np.array([item[0] for item in test_data]))
+    r2 = r2_score(y_test, y_pred)
+
+    # Plotting
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=prediction_dates, y=actual_prices, mode='lines', name='Actual Prices'))
+    fig.add_trace(go.Scatter(x=future_dates, y=future_predictions, mode='lines+markers', name='Future Predictions'))
 
     # Update layout
-    figure.update_layout(
-        title='Line Graph Example',
-        xaxis={'title': 'Date'},
-        yaxis={'title': 'Price'},
-    )
+    fig.update_layout(title=f'Actual vs Predicted Prices for {ticker}',
+                      xaxis_title='Date',
+                      yaxis_title='Stock Price',
+                      xaxis_rangeslider_visible=True)
 
-    # Output message if no lines are found
-    if not filtered_labels:
-        return figure, "No lines found matching the search."
+    return fig
 
-    return figure, ""
-
-# Run the app
-if __name__ == '__main__':
-    app.run_server(debug=True)
+@callback(
+    Output('prediction-graph', 'figure'),
+    Input('url', 'pathname'),
+    Input('predict-button', 'n_clicks'),
+    Input('days-to-predict', 'value')
+)
+def update_graph(pathname, n_clicks, days_to_predict):
+    stock_id = pathname.split('/')[-2]  # Extract stock_id from the URL
+    if n_clicks > 0:
+        return start_predict(stock_id, days_to_predict)
+    return go.Figure()  # Return an empty figure initially
