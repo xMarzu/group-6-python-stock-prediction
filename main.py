@@ -47,14 +47,6 @@ if __name__ == "__main__":
     # backtestRsi('AAPL', takeProfit=0.1, stopLoss=0.05, buyAmount=10)
     app.run_server(debug = True)
     
-
-
-
-
-
-
-
-
 # Example usage
 
 # Number inputs for smacrossover is 6, MACDrsi has 3, RSI has 3.
