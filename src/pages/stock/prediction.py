@@ -3,7 +3,7 @@ from datetime import date,timedelta
 from dash import html, dcc, callback, Output, Input
 import plotly.graph_objs as go
 from src.components.stock.single_stock_base_layout import stock_base_layout
-from linearRegression import download_data, preprocess_data, split_data, train_model
+from linearRegression import download_data, preprocess_data, split_data, train_model, predict_next_day_price
 from prophetModel import get_stock_data,fit_prophet_model,make_prediction,evaluate_prophet_model
 import numpy as np
 from sklearn.metrics import r2_score
@@ -59,7 +59,7 @@ def start_predict_Linear(stock_id):
 
     # Preprocess data - Creates sequences of 10 days of stock prices, target on the 11th day
     sequence_length = 10
-    data_sequences = preprocess_data(stock_data, dates, sequence_length)
+    data_sequences = preprocess_data(stock_data, sequence_length)
 
     # Split data into training and testing sets
     train_data, test_data = split_data(data_sequences)
@@ -71,7 +71,7 @@ def start_predict_Linear(stock_id):
     # Prepare testing data
     X_test = np.array([item[0] for item in test_data])
     y_test = np.array([item[1] for item in test_data])
-    test_dates = [item[2] for item in test_data]  # Extract dates for test data
+    
 
     # Train linear regression model
     model = train_model(X_train, y_train)
@@ -81,15 +81,11 @@ def start_predict_Linear(stock_id):
 
     # Prepare data for the graph
     actual_prices = [item[1] for item in test_data]
-    prediction_dates = [item[2] for item in test_data]
-
-    # Calculate R-squared score
-    r2 = r2_score(y_test, y_pred)
 
     # Plotting
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=prediction_dates, y=actual_prices, mode='lines', name='Actual Prices'))
-    fig.add_trace(go.Scatter(x=prediction_dates, y=y_pred, mode='lines', name='Predicted Prices'))
+    fig.add_trace(go.Scatter(x=dates, y=actual_prices, mode='lines', name='Actual Prices'))
+    fig.add_trace(go.Scatter(x=dates, y=y_pred, mode='lines', name='Predicted Prices'))
 
     # Update layout
     fig.update_layout(title=f'Actual vs Predicted Prices for {ticker} using Linear Regression',
