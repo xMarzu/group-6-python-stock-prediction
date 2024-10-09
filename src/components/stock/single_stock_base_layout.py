@@ -1,5 +1,5 @@
 import dash
-from dash import html, callback, Output,  Input, dcc,ctx, ALL
+from dash import html, callback, Output,  Input, dcc,ctx, ALL, State
 import yfinance as yf
 from dash import dcc
 import plotly.express as px
@@ -8,10 +8,27 @@ import plotly.graph_objects as go
 from src.components.stock.base.header_layout import header_layout
 from src.components.stock.base.stock_tabs import stock_tabs
 from src.components.stock.stock_layout_functions import get_stock_id_from_url
+from src.components.stock.overview.overview_stock_export import downloadCSV
 import yfinance as yf
 '''
 This file contains the base layout of all single stock pages. 
 '''
+
+@callback(Input("export-button", "n_clicks"), [State("period-store", "data"), State("url","pathname")])
+def export_stock(n_clicks, data, url):
+    if (n_clicks > 0):
+        stock_id = get_stock_id_from_url(url)
+
+        period = data.get("period","max") ##default max if none
+        downloadCSV(stock_id,period)
+    
+
+
+#For updating the period store
+@callback (Output("period-store","data"), Input("period-dropdown", "value"))
+def update_period_export(val):
+    return {"period" : val}
+    
 
 #Whatever needs to be fetched, fetch and store in dcc store for other components to access
 @callback (Output("header-store", "data"), Input("url","pathname"))
@@ -59,16 +76,49 @@ def stock_base_layout(stock_id : str):
     """
 
     return (
-        
         html.Div(
             [
-                dcc.Location(id="url"),
-                header_layout(),
-                stock_tabs(stock_id=stock_id)
-                
-    
-            ], className = "flex flex-col gap-4 mt-8"
+            html.Div(
+                [
+                    dcc.Location(id="url"),
+                    dcc.Store(id="period-store"),
+                    header_layout(),
+                    stock_tabs(stock_id=stock_id)
+                    
+        
+                ], className = "flex flex-col gap-4 mt-8"
             
            
+                ),
+              html.Div(
+                [
+                    html.P("Period"),
+                    dcc.Dropdown(
+                    id='period-dropdown',
+                    options=[
+                         {'label': '1 Day', 'value': '1d'},
+                        {'label': '5 Days', 'value': '5d'},
+                        {'label': '1 Month', 'value': '1mo'},
+                        {'label': '3 Month', 'value': '3mo'},
+                        {'label': '6 Month', 'value': '6mo'},
+                        {'label': '1 Year', 'value': '1y'},
+                        {'label': '2 Years', 'value': '2y'},
+                        {'label': '5 Years', 'value': '5y'},
+                        {'label': '10 Years', 'value': '10y'},
+                        {'label': 'YTD', 'value': 'ytd'},
+                        {'label': 'Max', 'value': 'max'},
+
+                    ],
+                    value='max'  # Default value
+                    ),
+                    html.Button("Export to CSV", className="p-2 bg-green-400" ,id="export-button", n_clicks=0)
+        
+                ], className = "flex flex-col gap-2 mt-8"
+            
+           
+                )           
+            ], className="flex justify-between"
         )
+        
+       
     )
