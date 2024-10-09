@@ -24,7 +24,7 @@ def preprocess_data(data, sequence_length):
 	return sequences
 
 # Split data into training and testing sets
-def split_data(data, test_size=0.2):
+def split_data(data, test_size=0.3):
 	train_data, test_data = train_test_split(data, test_size=test_size, shuffle=False)
 	return train_data, test_data
 
