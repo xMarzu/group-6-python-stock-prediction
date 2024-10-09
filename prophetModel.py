@@ -112,7 +112,7 @@ def evaluate_prophet_model(stock_data, initial='365 days', period='180 days', ho
     
     # Calculate performance metrics
     df_metrics = performance_metrics(df_cv)
-    
+
     return df_metrics
 
 def main():
@@ -128,10 +128,13 @@ def main():
     
     if predicted_price is not None:
         if actual_price is not None:
+            print("-"*100)
             print(f"The predicted price for {predict_date} is {predicted_price}, and the actual price was {actual_price}.")
         else:
+            print("-"*100)
             print(f"The predicted price for {predict_date} is {predicted_price}.")
     else:
+        print("-"*100)
         print("Prediction could not be made.")
     
     # Evaluate the model using evaluate_prophet_model func().

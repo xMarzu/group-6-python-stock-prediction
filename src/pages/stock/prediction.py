@@ -1,5 +1,5 @@
 import dash
-from datetime import date
+from datetime import date,timedelta
 from dash import html, dcc, callback, Output, Input
 import plotly.graph_objs as go
 from src.components.stock.single_stock_base_layout import stock_base_layout
@@ -100,37 +100,55 @@ def start_predict_Linear(stock_id):
     return fig
 
 def start_predict_Prophet(stock_id, prediction_date):
-    # Get today's date and format into yyyy-mm-dd
-    today=date.today()
-    formatted_date = today.strftime("%Y-%m-%d")
+    today = date.today()
+    # Calculate yesterday's date
+    yesterday = today - timedelta(days=1)
+    formatted_date = yesterday.strftime("%Y-%m-%d")
 
     ticker = stock_id
-    start_date = '2014-01-01'
+    start_date = '2020-01-01'
     end_date = formatted_date
-    
+
     # Get stock data and fit the Prophet model
     stock_data = get_stock_data(ticker, start_date, end_date)
     model = fit_prophet_model(stock_data)
-    
+
     # Make predictions based on the user-specified date
     predicted_price, actual_price = make_prediction(model, stock_data, end_date, prediction_date)
 
-    # Prepare data for the bar graph
+    # Prepare data for the line graph
+    actual_prices = stock_data['y'].values[-len(stock_data):]  # Assuming 'y' contains actual prices
+    prediction_dates = stock_data['ds'].values[-len(stock_data):]  # Assuming 'ds' contains dates
+
+    # Create a new figure
+    fig = go.Figure()
+
+    # Plot actual prices
+    fig.add_trace(go.Scatter(
+        x=prediction_dates,
+        y=actual_prices,
+        mode='lines',
+        name='Actual Prices'
+    ))
+
+    # Plot predicted price
     if predicted_price is not None:
-        prices = [actual_price] if actual_price is not None else [0]
-        predicted_prices = [predicted_price] if predicted_price is not None else [0]
+        # Append the predicted price to the end date
+        fig.add_trace(go.Scatter(
+            x=[prediction_date],
+            y=[predicted_price],
+            mode='markers+lines',
+            name='Predicted Price',
+            marker=dict(size=10)
+        ))
 
-        labels = ['Actual Price', 'Predicted Price']
-        fig = go.Figure()
-        fig.add_trace(go.Bar(x=labels, y=[prices[0], predicted_prices[0]], name='Prices'))
+    # Update layout
+    fig.update_layout(
+        title=f'Actual vs Predicted Prices for {ticker} using Prophet',
+        xaxis_title='Date',
+        yaxis_title='Stock Price',
+        xaxis_rangeslider_visible=True
+    )
 
-        fig.update_layout(title=f'Actual vs Predicted Prices for {ticker} using Prophet',
-                          xaxis_title='Price Type',
-                          yaxis_title='Stock Price',
-                          barmode='group')
-
-        return fig
-    else:
-        print("Prediction could not be made.")
-        return go.Figure()  # Return an empty figure if prediction fails
+    return fig
 

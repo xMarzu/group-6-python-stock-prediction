@@ -39,29 +39,10 @@ layout = html.Div([
         dashGridOptions={
             "pagination": True,
             "paginationPageSize": 20,  # Set the page size for pagination
-            "frameworkComponents":{
-                "StockLink":{
-                    "component": "ag-grid-button-component",
-                    "params":{
-                        "text":"Test",
-                        "click":"onClick"
-                    }
-                }
-            }
+            
         },
         
 
     )
 ])
-@callback(
-    Output('url',"pathname"),
-    [Input('enable-pagination','cellClicked')]
-)
-def navigate(cell):
-    if cell and 'link' in cell['data']:
-        stock_symbol = cell['data']['link']
-        return f"/stocks/{stock_symbol}"  # Update to your route
-    return dash.no_update
-
-
 

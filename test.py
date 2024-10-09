@@ -86,3 +86,41 @@ def update_graph(pathname, n_clicks, days_to_predict):
     if n_clicks > 0:
         return start_predict(stock_id, days_to_predict)
     return go.Figure()  # Return an empty figure initially
+
+def start_predict_Prophet(stock_id, prediction_date):
+    # Get today's date and format into yyyy-mm-dd
+    today=date.today()
+    # Calculate yesterday's date
+    yesterday = today - timedelta(days=1)    
+    formatted_date = yesterday.strftime("%Y-%m-%d")
+    
+
+    ticker = stock_id
+    start_date = '2020-01-01'
+    end_date = formatted_date
+    
+    # Get stock data and fit the Prophet model
+    stock_data = get_stock_data(ticker, start_date, end_date)
+    model = fit_prophet_model(stock_data)
+    
+    # Make predictions based on the user-specified date
+    predicted_price, actual_price = make_prediction(model, stock_data, end_date, prediction_date)
+
+    # Prepare data for the bar graph
+    if predicted_price is not None:
+        prices = [actual_price] if actual_price is not None else [0]
+        predicted_prices = [predicted_price] if predicted_price is not None else [0]
+
+        labels = ['Actual Price', 'Predicted Price']
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=labels, y=[prices[0], predicted_prices[0]], name='Prices'))
+
+        fig.update_layout(title=f'Actual vs Predicted Prices for {ticker} using Prophet',
+                          xaxis_title='Price Type',
+                          yaxis_title='Stock Price',
+                          barmode='group')
+
+        return fig
+    else:
+        print("Prediction could not be made.")
+        return go.Figure()  # Return an empty figure if prediction fails
