@@ -1,4 +1,5 @@
 import dash
+import pandas as pd
 from datetime import date, timedelta
 from dash import html, dcc, callback, Output, Input
 import plotly.graph_objs as go
@@ -59,9 +60,13 @@ def update_graph(pathname, prediction_date, n_clicks, selected_tab):
     return go.Figure()  
 
 def start_predict_Linear(stock_id):
-    # Get today's date and format into yyyy-mm-dd
+    date_list = pd.date_range(start='2014-01-01', end=pd.Timestamp.today()).date
+    date_list = list(date_list)
+    print(date_list)
+    # Calculate yesterday's date
     today = date.today()
-    formatted_date = today.strftime("%Y-%m-%d")
+    yesterday = today - timedelta(days=1)
+    formatted_date = yesterday.strftime("%Y-%m-%d")
     # Main Execution - Download stock data
     ticker = stock_id 
     start_date = '2014-01-01'
@@ -92,10 +97,14 @@ def start_predict_Linear(stock_id):
     # Prepare data for the graph
     actual_prices = [item[1] for item in test_data]
 
+    # Create a date range for the test data
+    test_start_date = pd.to_datetime(stock_data.index[-len(test_data):]).date
+    prediction_dates = pd.date_range(start=test_start_date[0], periods=len(test_data)).date
+
     # Plotting
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=dates, y=actual_prices, mode='lines', name='Actual Prices'))
-    fig.add_trace(go.Scatter(x=dates, y=y_pred, mode='lines', name='Predicted Prices'))
+    fig.add_trace(go.Scatter(x=prediction_dates, y=actual_prices, mode='lines', name='Actual Prices'))
+    fig.add_trace(go.Scatter(x=prediction_dates, y=y_pred, mode='lines', name='Predicted Prices'))
 
     # Update layout
     fig.update_layout(title=f'Actual vs Predicted Prices for {ticker} using Linear Regression',
