@@ -3,7 +3,7 @@ from datetime import date,timedelta
 from dash import html, dcc, callback, Output, Input
 import plotly.graph_objs as go
 from src.components.stock.single_stock_base_layout import stock_base_layout
-from linearRegression import download_stock_data, preprocess_data, split_data, train_model
+from linearRegression import download_data, preprocess_data, split_data, train_model
 from prophetModel import get_stock_data,fit_prophet_model,make_prediction,evaluate_prophet_model
 import numpy as np
 from sklearn.metrics import r2_score
@@ -55,7 +55,7 @@ def start_predict_Linear(stock_id):
     ticker = stock_id  # Use the stock_id from the URL
     start_date = '2014-01-01'
     end_date = formatted_date
-    stock_data, dates = download_stock_data(ticker, start_date, end_date)
+    stock_data, dates = download_data(ticker, start_date, end_date)
 
     # Preprocess data - Creates sequences of 10 days of stock prices, target on the 11th day
     sequence_length = 10
