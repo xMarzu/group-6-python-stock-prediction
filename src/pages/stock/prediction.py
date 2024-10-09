@@ -1,58 +1,69 @@
 import dash
-from datetime import date,timedelta
+from datetime import date, timedelta
 from dash import html, dcc, callback, Output, Input
 import plotly.graph_objs as go
 from src.components.stock.single_stock_base_layout import stock_base_layout
 from linearRegression import download_data, preprocess_data, split_data, train_model, predict_next_day_price
-from prophetModel import get_stock_data,fit_prophet_model,make_prediction,evaluate_prophet_model
+from prophetModel import get_stock_data, fit_prophet_model, make_prediction, evaluate_prophet_model
 import numpy as np
-from sklearn.metrics import r2_score
 
 dash.register_page(__name__, path_template="/stocks/<stock_id>/prediction")
 
 def layout(stock_id=None, **kwargs):
     # Get today's date and format into yyyy-mm-dd
-    today=date.today()
+    today = date.today()
     formatted_date = today.strftime("%Y-%m-%d")
+    
     return html.Div([
         stock_base_layout(stock_id),
         html.H3("Stock Price Prediction"),
-        dcc.Graph(id='prediction-graph-linear'),
-        html.H3("-"*189),
         dcc.Input(
             id='prediction-date-input',
-            type='text',  # You can also use 'date' type if you want a date picker
-            value=formatted_date,  # Default value
+            type='text', 
+            value=formatted_date,
             placeholder='Enter date (YYYY-MM-DD)',
             style={'margin': '10px'}
         ),
         html.Button('Predict', id='predict-button', n_clicks=0),
-        dcc.Graph(id='prediction-graph-prophet'),
-
+        
+        # Add Tabs for Linear and Prophet predictions
+        dcc.Tabs(id='prediction-tabs', value='linear-tab', children=[
+            dcc.Tab(label='Linear Regression', value='linear-tab'),
+            dcc.Tab(label='Prophet Model', value='prophet-tab'),
+        ]),
+        
+        dcc.Graph(id='prediction-graph')
     ])
 
 @callback(
-    Output('prediction-graph-linear', 'figure'),
-    Output('prediction-graph-prophet', 'figure'),
+    Output('prediction-graph', 'figure'),
     Input('url', 'pathname'),
     Input('prediction-date-input', 'value'),
-    Input('predict-button', 'n_clicks')
+    Input('predict-button', 'n_clicks'),
+    Input('prediction-tabs', 'value')
 )
-def update_graph(pathname, prediction_date, n_clicks):
-    stock_id = pathname.split('/')[-2]  # Extract stock_id from the URL
-    linear_fig = start_predict_Linear(stock_id)
+def update_graph(pathname, prediction_date, n_clicks, selected_tab):
+    # Extract stock_id from the URL
+    stock_id = pathname.split('/')[-2] 
+
+    if selected_tab == 'linear-tab':
+        # Call the linear prediction function
+        return start_predict_Linear(stock_id)
     
-    # Only call the Prophet prediction function if the button has been clicked
-    prophet_fig = start_predict_Prophet(stock_id, prediction_date) if n_clicks > 0 else go.Figure()
-    
-    return linear_fig, prophet_fig
+    elif selected_tab == 'prophet-tab':
+        # Only call the Prophet prediction function if the button has been clicked
+        if n_clicks > 0:
+            return start_predict_Prophet(stock_id, prediction_date)
+        
+    # Return an empty figure if no tab is selected
+    return go.Figure()  
 
 def start_predict_Linear(stock_id):
     # Get today's date and format into yyyy-mm-dd
-    today=date.today()
+    today = date.today()
     formatted_date = today.strftime("%Y-%m-%d")
     # Main Execution - Download stock data
-    ticker = stock_id  # Use the stock_id from the URL
+    ticker = stock_id 
     start_date = '2014-01-01'
     end_date = formatted_date
     stock_data, dates = download_data(ticker, start_date, end_date)
@@ -72,7 +83,6 @@ def start_predict_Linear(stock_id):
     X_test = np.array([item[0] for item in test_data])
     y_test = np.array([item[1] for item in test_data])
     
-
     # Train linear regression model
     model = train_model(X_train, y_train)
 
@@ -96,8 +106,8 @@ def start_predict_Linear(stock_id):
     return fig
 
 def start_predict_Prophet(stock_id, prediction_date):
-    today = date.today()
     # Calculate yesterday's date
+    today = date.today()
     yesterday = today - timedelta(days=1)
     formatted_date = yesterday.strftime("%Y-%m-%d")
 
@@ -147,4 +157,3 @@ def start_predict_Prophet(stock_id, prediction_date):
     )
 
     return fig
-
