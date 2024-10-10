@@ -25,7 +25,7 @@ def make_prediction(model, stock_data, end_date, predict_date):
     Make a prediction for the specified date using the fitted Prophet model.
     """
     end_date_dt = datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S").date()
-    predict_date_dt = datetime.strptime(predict_date, "%Y-%m-%d").date()
+    predict_date_dt = datetime.strptime(predict_date, "%Y-%m-%d %H:%M:%S").date()
     
     print(f"End date: {end_date_dt}")
     print(f"Prediction date: {predict_date_dt}")

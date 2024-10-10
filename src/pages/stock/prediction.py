@@ -2,7 +2,7 @@ import dash
 import pandas as pd
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
-from dash import html, dcc, callback, Output, Input
+from dash import html, dcc, callback, Output, Input, State
 import plotly.graph_objs as go
 from src.components.stock.single_stock_base_layout import stock_base_layout
 from linearRegression import download_data, preprocess_data, split_data, train_model, predict_next_day_price, validate_dates
@@ -21,56 +21,52 @@ def layout(stock_id=None, **kwargs):
     
     return html.Div([
         stock_base_layout(stock_id),
-        html.H3("Stock Price Prediction"),
+        dcc.Store(id='user-input-store-predict'),
         
         # Add Tabs for Linear and Prophet predictions
         dcc.Tabs(id='prediction-tabs', value='linear-tab', children=[
             dcc.Tab(label='Linear Regression', value='linear-tab', children=[
+                html.H3("This prediction tool utilizes Linear Regression to forecast stock prices. To begin, please enter a start date and an end date for the model's training. Note that the model requires at least one month of data to function properly. After clicking the 'Predict Next Day' button, you will receive the predicted stock price for the following day, along with the R-squared score that indicates the model's performance."),
+                dcc.Markdown(id='invalid',className="font-bold text-red-600 "),
                 html.H3("Start Date:"),
-                dcc.Input(
+                dcc.DatePickerSingle(
                     id='prediction-date-input-start-linear',
-                    type='text', 
-                    value=years_before,
-                    placeholder='Enter date (YYYY-MM-DD)',
-                    style={'margin': '10px'}
-                ),
+                    placeholder='DD/MM/YYYY',
+                    initial_visible_month=formatted_date,
+                    date=years_before),
                 html.H3("End Date:"),
-                dcc.Input(
+                dcc.DatePickerSingle(
                     id='prediction-date-input-end-linear',
-                    type='text', 
-                    value=formatted_date,
-                    placeholder='Enter date (YYYY-MM-DD)',
-                    style={'margin': '10px'}
-                ),
-                html.Button('Predict', id='predict-button-linear', n_clicks=0),
+                    placeholder='DD/MM/YYYY',
+                    initial_visible_month=formatted_date,
+                    date=formatted_date),
+                html.Button('Predict Next Day', id='predict-button-linear', n_clicks=0,className="mt-4 bg-blue-400 rounded-lg p-2 mb-4"),
                 dcc.Markdown(id='r2_score'),
             ]),
             dcc.Tab(label='Prophet Model', value='prophet-tab', children=[
+                html.H3("This prediction tool utilizes Prophet Model to forecast stock prices. To begin, please enter a start date and an end date for the model's training. Note that the model requires at least one month of data to function properly. Please also enter a date that you wish to predict. After clicking the 'Predict Day' button, you will receive the predicted stock price for the specificed day."),
                 html.H3("Start Date:"),
-                dcc.Input(
+                dcc.Markdown(id='invalid2',className="font-bold text-red-600 "),
+                dcc.DatePickerSingle(
                     id='prediction-date-input-start-prophet',
-                    type='text', 
-                    value=years_before,
-                    placeholder='Enter date (YYYY-MM-DD)',
-                    style={'margin': '10px'}
-                ),
+                    placeholder='DD/MM/YYYY',
+                    initial_visible_month=formatted_date,
+                    date=years_before),
                 html.H3("End Date:"),
-                dcc.Input(
+                dcc.DatePickerSingle(
                     id='prediction-date-input-end-prophet',
-                    type='text', 
-                    value=formatted_date,
-                    placeholder='Enter date (YYYY-MM-DD)',
-                    style={'margin': '10px'}
-                ),
+                    placeholder='DD/MM/YYYY',
+                    initial_visible_month=formatted_date,
+                    date=formatted_date),
                 html.H3("Date you wish to predict:"),
-                dcc.Input(
+                dcc.DatePickerSingle(
                     id='prediction-date-input-future-prophet',
-                    type='text', 
-                    value=tomorrow,
-                    placeholder='Enter date (YYYY-MM-DD)',
-                    style={'margin': '10px'}
-                ),
-                html.Button('Predict', id='predict-button-prophet', n_clicks=0),
+                    placeholder='DD/MM/YYYY',
+                    initial_visible_month=formatted_date,
+                    date=tomorrow),
+                
+                html.Button('Predict Day', id='predict-button-prophet', n_clicks=0,className="mt-4 bg-blue-400 rounded-lg p-2 mb-4"),
+                dcc.Markdown(id='score_prophet'),
             ]),
         ]),
         
@@ -78,42 +74,103 @@ def layout(stock_id=None, **kwargs):
     ])
 
 @callback(
+    Output('user-input-store-predict', 'data'),
+    Input('prediction-date-input-start-linear', 'date'),
+    Input('prediction-date-input-end-linear', 'date'),
+    Input('prediction-date-input-start-prophet', 'date'),
+    Input('prediction-date-input-end-prophet', 'date'),
+    Input('prediction-date-input-future-prophet', 'date'),
+)
+def store_user_inputs_predict(prediction_date_start_linear,prediction_date_end_linear, prediction_date_start_prophet,prediction_date_end_prophet,prediction_date_future_prophet):
+    return {
+        'prediction_date_start_linear': prediction_date_start_linear,
+        'prediction_date_end_linear': prediction_date_end_linear,
+        'prediction_date_start_prophet': prediction_date_start_prophet,
+        'prediction_date_end_prophet': prediction_date_end_prophet,
+        'prediction_date_future_prophet': prediction_date_future_prophet,
+
+    }
+
+
+@callback(
     Output('prediction-graph', 'figure'),
     Output('r2_score','children'),
+    Output('invalid','children'),
+    Output('score_prophet','children'),
+    Output('invalid2','children'),
     Input('url', 'pathname'),
-    Input('prediction-date-input-start-linear', 'value'),
-    Input('prediction-date-input-end-linear', 'value'),
     Input('predict-button-linear', 'n_clicks'),
-    Input('prediction-date-input-start-prophet', 'value'),
-    Input('prediction-date-input-end-prophet', 'value'),
-    Input('prediction-date-input-future-prophet', 'value'),
     Input('predict-button-prophet', 'n_clicks'),
-    Input('prediction-tabs', 'value')
+    Input('prediction-tabs', 'value'),
+    State('user-input-store-predict', 'data')
 )
 
-
-def update_graph(pathname,prediction_date_start_linear,prediction_date_end_linear,n_clicks_linear, prediction_date_start_prophet,prediction_date_end_prophet,prediction_date_future_prophet, n_clicks_prophet, selected_tab):
+def update_graph(pathname,n_clicks_linear,n_clicks_prophet,selected_tab,store_user_inputs_predict):
     # Extract stock_id from the URL
     stock_id = pathname.split('/')[-2] 
+    
     r2=[]
-    if selected_tab == 'linear-tab':
-        start_date = pd.Timestamp(prediction_date_start_linear)
-        end_date = pd.Timestamp(prediction_date_end_linear)
+    prophet_score=[]
+    invalid=[]
+    invalid2=[]
+    if store_user_inputs_predict is None:
+        return go.Figure(), r2,invalid,prophet_score,invalid2
+    
+    elif selected_tab == 'linear-tab':
+        r2=[]
+        prophet_score=[]
+        invalid=[]
+        invalid2=[]
+        start_date_str = store_user_inputs_predict['prediction_date_start_linear']
+        end_date_str = store_user_inputs_predict['prediction_date_end_linear']
+        
+        start_date = pd.to_datetime(start_date_str, errors='coerce')
+        end_date = pd.to_datetime(end_date_str, errors='coerce')
+        print(start_date)
+        print(end_date)
         # Call the linear prediction function
-        if n_clicks_linear > 0 and validate_dates(start_date,end_date):
-            return start_predict_Linear(stock_id,start_date,end_date)
+        if n_clicks_linear > 0:
+            if validate_dates(start_date, end_date):
+                print('y')
+                # If dates are valid, call the prediction function
+                return start_predict_Linear(stock_id, start_date, end_date)
+            else:
+                # If dates are invalid, set the invalid message
+                invalid = 'INVALID INPUT'
+        else:
+            # Handle the case when the button is not clicked
+            invalid= None
     
     elif selected_tab == 'prophet-tab':
+        r2=[]
+        prophet_score=[]
+        invalid=[]
+        invalid2=[]
         # Only call the Prophet prediction function if the button has been clicked
-        start_date = pd.Timestamp(prediction_date_start_prophet)
-        end_date = pd.Timestamp(prediction_date_end_prophet)
-        if n_clicks_prophet > 0 and validate_dates(start_date,end_date):
-            return start_predict_Prophet(stock_id, start_date,end_date,prediction_date_future_prophet)
-        
-    # Return an empty figure if no tab is selected
-    return go.Figure(),r2
+        start_date_str = store_user_inputs_predict['prediction_date_start_prophet']
+        end_date_str = store_user_inputs_predict['prediction_date_end_prophet']
+        predict_date_str=store_user_inputs_predict['prediction_date_future_prophet']
+        start_date = pd.to_datetime(start_date_str, errors='coerce')
+        end_date = pd.to_datetime(end_date_str, errors='coerce')
+        predict_date = pd.to_datetime(predict_date_str, errors='coerce')
+        if n_clicks_prophet > 0:
+            if validate_dates(start_date, end_date):
+                # If dates are valid, call the prediction function
+                return start_predict_Prophet(stock_id, start_date, end_date, predict_date)
+            else:
+                # If dates are invalid, set the invalid message
+                invalid2 = 'INVALID INPUT'
+        else:
+            # Handle the case when the button is not clicked
+            invalid2 = None
+
+    # Return the figure and any other output values
+    return go.Figure(), r2, invalid, prophet_score, invalid2
 
 def start_predict_Linear(stock_id,prediction_date_start_linear,prediction_date_end_linear):
+    invalid=[]
+    invalid2=[]
+    prophet_score=[]
     # Main Execution - Download stock data
     ticker = stock_id 
     start_date = prediction_date_start_linear
@@ -150,11 +207,7 @@ def start_predict_Linear(stock_id,prediction_date_start_linear,prediction_date_e
     fig.add_trace(go.Scatter(x=prediction_dates, y=actual_prices, mode='lines', name='Actual Prices'))
     fig.add_trace(go.Scatter(x=prediction_dates, y=y_pred, mode='lines', name='Predicted Prices'))
 
-    # Update layout
-    fig.update_layout(title=f'Actual vs Predicted Prices for {ticker} using Linear Regression',
-                      xaxis_title='Date',
-                      yaxis_title='Stock Price',
-                      xaxis_rangeslider_visible=True)
+    
     
     # Predict the next day's stock price using the last available sequence
     last_sequence = stock_data.iloc[-sequence_length:].values  # Last 10 days before the last available date
@@ -167,6 +220,10 @@ def start_predict_Linear(stock_id,prediction_date_start_linear,prediction_date_e
     # Predict stock price for the next day
     predicted_price, next_day = predict_next_day_price(model, last_sequence, last_date)
 
+    fig.add_trace(go.Scatter(x=[next_day], y=[predicted_price], mode='markers', name='Predicted Next Day', marker=dict(size=10, color='red')
+    ))
+
+
     # Output the predicted price for the next day
     print(f"\nPredicted Stock Price for {next_day.date()}, or next possible trading day: ${predicted_price:.2f}")
 
@@ -175,7 +232,8 @@ def start_predict_Linear(stock_id,prediction_date_start_linear,prediction_date_e
     testing_y = np.array([item[1] for item in test_data])
     y_pred = model.predict(testing_x)
     r2 = r2_score(testing_y, y_pred)
-    r2_scores = f"**R-squared score:** {r2:.4f}  \n" \
+    r2_scores = f"\n**Predicted Stock Price** for {next_day.date()}, or next possible trading day: ${predicted_price:.2f} \n\n" \
+                f"**R-squared score:** {r2:.4f}  \n" \
                 f"**Explanation:** The R-squared (R²) score measures how well the model predicts stock prices.  \n" \
                 f"An R² score of 1.0 indicates a perfect prediction, while a score close to 0 means the model's predictions are less accurate."
     print("\n*** Model Performance on Test Data ***")
@@ -183,9 +241,17 @@ def start_predict_Linear(stock_id,prediction_date_start_linear,prediction_date_e
     print("Explanation: The R-squared (R²) score measures how well the model predicts stock prices.")
     print("An R² score of 1.0 indicates a perfect prediction, while a score close to 0 means the model's predictions are less accurate.\n")
 
-    return fig ,r2_scores
+    # Update layout
+    fig.update_layout(title=f'Actual vs Predicted Prices for {ticker} using Linear Regression',
+                      xaxis_title='Date',
+                      yaxis_title='Stock Price',
+                      xaxis_rangeslider_visible=True)
+    return fig ,r2_scores,invalid,prophet_score,invalid2
 
 def start_predict_Prophet(stock_id, prediction_date_start_prophet,prediction_date_end_prophet,prediction_date_future_prophet):
+    r2_scores=[]
+    invalid2=[]
+    invalid=[]
     # Main Execution
     ticker = stock_id
     start_date = prediction_date_start_prophet
@@ -215,6 +281,7 @@ def start_predict_Prophet(stock_id, prediction_date_start_prophet,prediction_dat
 
     # Plot predicted price
     if predicted_price is not None:
+        prophet_score=f"\n**Predicted Stock Price** for {prediction_date_future_prophet}: ${predicted_price:.2f} \n\n"
         # Append the predicted price to the end date
         fig.add_trace(go.Scatter(
             x=[prediction_date_future_prophet],
@@ -232,4 +299,4 @@ def start_predict_Prophet(stock_id, prediction_date_start_prophet,prediction_dat
         xaxis_rangeslider_visible=True
     )
 
-    return fig
+    return fig,r2_scores,invalid,prophet_score,invalid2

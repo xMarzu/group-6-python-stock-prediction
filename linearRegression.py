@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import yfinance as yf
 from sklearn.metrics import r2_score
+from datetime import datetime
 
 # Download stock price data
 def download_data(stock_symbol, start_date, end_date):
@@ -66,15 +67,16 @@ def predict_for_date(model, stock_data, target_date, sequence_length):
 	
 	return actual_price, predicted_price
 
-
 def validate_dates(start_date, end_date):
-    if end_date < start_date:
-        raise ValueError("End date cannot be earlier than start date.")
-    
-    if (end_date - start_date).days < 30:
-        raise ValueError("The duration between start date and end date must be at least 1 month.")
-    
-    return True
+	start_date = pd.to_datetime(start_date, errors='coerce')
+	end_date = pd.to_datetime(end_date, errors='coerce')
+	if pd.isna(start_date) or pd.isna(end_date):
+		return False
+	if end_date < start_date:
+		return False
+	if (end_date - start_date).days < 30:
+		return False
+	return True
 
 
 def main():
