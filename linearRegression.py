@@ -15,12 +15,13 @@ def download_data(stock_symbol, start_date, end_date):
 	return stock_data['Adj Close'], stock_data.index  # Return both prices and dates
 
 # Preprocess data and create input sequences
-def preprocess_data(data, sequence_length):
+def preprocess_data(data,dates, sequence_length):
 	sequences = []
 	for i in range(len(data) - sequence_length):
 		sequence = data.iloc[i:i + sequence_length].values  # Use .iloc for position-based indexing
 		target = data.iloc[i + sequence_length]  # Use .iloc to properly get the target
-		sequences.append((sequence, target))
+		date = dates[i+sequence_length]
+		sequences.append((sequence, target,date))
 	return sequences
 
 # Split data into training and testing sets
@@ -64,6 +65,16 @@ def predict_for_date(model, stock_data, target_date, sequence_length):
 	predicted_price = model.predict(sequence.reshape(1, -1))[0]
 	
 	return actual_price, predicted_price
+
+
+def validate_dates(start_date, end_date):
+    if end_date < start_date:
+        raise ValueError("End date cannot be earlier than start date.")
+    
+    if (end_date - start_date).days < 30:
+        raise ValueError("The duration between start date and end date must be at least 1 month.")
+    
+    return True
 
 
 def main():
