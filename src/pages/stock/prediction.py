@@ -43,7 +43,7 @@ def layout(stock_id=None, **kwargs):
                     style={'margin': '10px'}
                 ),
                 html.Button('Predict', id='predict-button-linear', n_clicks=0),
-                html.H3(id='r2_score'),
+                dcc.Markdown(id='r2_score'),
             ]),
             dcc.Tab(label='Prophet Model', value='prophet-tab', children=[
                 html.H3("Start Date:"),
@@ -175,7 +175,9 @@ def start_predict_Linear(stock_id,prediction_date_start_linear,prediction_date_e
     testing_y = np.array([item[1] for item in test_data])
     y_pred = model.predict(testing_x)
     r2 = r2_score(testing_y, y_pred)
-    r2_scores = f'R-squared score: {r2:.4f}'
+    r2_scores = f"**R-squared score:** {r2:.4f}  \n" \
+                f"**Explanation:** The R-squared (R²) score measures how well the model predicts stock prices.  \n" \
+                f"An R² score of 1.0 indicates a perfect prediction, while a score close to 0 means the model's predictions are less accurate."
     print("\n*** Model Performance on Test Data ***")
     print(f"R-squared score: {r2:.4f}")
     print("Explanation: The R-squared (R²) score measures how well the model predicts stock prices.")
