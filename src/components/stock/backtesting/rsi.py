@@ -67,7 +67,7 @@ def backtestRsi(ticker,takeProfit,stopLoss,buyAmount):
         resultsDict = {
             "Trades": result['_trades'],
             'Total Return': result['Return [%]'],
-            'Max Drawdow':result['Max. Drawdown [%]'],
+            'Max Drawdown':result['Max. Drawdown [%]'],
             'Avg Trade Duration': result['Avg. Trade Duration'],
             'Win Rate': result['Win Rate [%]'],
             'Total Trades': result['# Trades'],

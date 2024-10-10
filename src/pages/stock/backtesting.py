@@ -13,6 +13,8 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import pandas as pd
 import dash_bootstrap_components as dbc
+import dash_table
+
 
 
 dash.register_page(__name__, path_template="/stocks/<stock_id>/backtesting")
@@ -47,18 +49,24 @@ def store_user_inputs(take_profit, stop_loss, buy_amount, strategy, average_shor
         'average_long': average_long,
     }
 
-@callback([Output("subplot-figure","figure") ,Output("input-invalid","style")], [Input("run-backtest", "n_clicks"), Input("url","pathname")], State('user-input-store', 'data'))
+@callback([Output("subplot-figure","figure") ,Output("input-invalid","style"), Output("results-table", "data")], [Input("run-backtest", "n_clicks"), Input("url","pathname")], State('user-input-store', 'data'))
 def runSMA(n_clicks, url, user_inputs):
+    
 
   
- 
+    
     if (n_clicks > 0):
         strategy = user_inputs.get('strategy', 'macd')  # Default to 'macd' if strategy is None
         take_profit = user_inputs.get('take_profit')
         stop_loss = user_inputs.get('stop_loss')
         buy_amount = user_inputs.get('buy_amount')
         stock_id = get_stock_id_from_url(url)
-      
+        average_short = -1 ##temp place holder
+        average_long = -2 ##temp place holder
+        if (take_profit is not None):
+            take_profit = take_profit/100
+        if (stop_loss is not None):
+            stop_loss = stop_loss/100
         if strategy == 'sma':
             average_short = user_inputs['average_short']
             average_long = user_inputs['average_long']
@@ -84,7 +92,7 @@ def runSMA(n_clicks, url, user_inputs):
         )
         
 
-        if (stats is None or (average_long == average_short)):
+        if (stats is None or average_long == average_short):
             fig = go.Figure()
             fig.update_layout(
                 title='Equity Curve',
@@ -94,11 +102,18 @@ def runSMA(n_clicks, url, user_inputs):
                 plot_bgcolor='#F1F1F1',
                 paper_bgcolor='#F1F1F1',
             )
-            return fig, {"visibility" : "visible"}
+            return fig, {"visibility" : "visible"}, []
+      
         
         equity_curve = stats['Equity Curve']
         trades = stats["Trades"]
         candlestick = stats["Candlestick"]
+        results_table_data = [{
+            'Total Return': stats['Total Return'],
+            'Max Drawdown': stats['Max Drawdown'],
+            'Avg Trade Duration': stats['Avg Trade Duration'],
+            'Win Rate': stats['Win Rate']
+        }]
         equity_curve = equity_curve.reset_index()
         # Merge the trades with the full dataset to expand the rows
         merged_data = pd.merge(equity_curve, trades, left_on='Date', right_on='EntryTime', how='left')
@@ -114,7 +129,7 @@ def runSMA(n_clicks, url, user_inputs):
         plot_volume(candlestick_data=candlestick, main_fig=fig)
         
         fig.update_layout(layout)
-        return fig, {"visibility" : "hidden"}
+        return fig, {"visibility" : "hidden"},  results_table_data
 
     else:
         fig = go.Figure()
@@ -126,10 +141,13 @@ def runSMA(n_clicks, url, user_inputs):
             plot_bgcolor='#F1F1F1',
             paper_bgcolor='#F1F1F1',
         )
-        return fig, {"visibility" : "hidden"}
+        return fig, {"visibility" : "hidden"}, []
 
 
 def layout(stock_id=None, **kwargs):
+    
+     
+    
     return(
       stock_base_layout(stock_id),
       dcc.Store(id='user-input-store'),  # Store for user inputs
@@ -155,7 +173,7 @@ def layout(stock_id=None, **kwargs):
                   
                 [
                     html.P("Take Profit (%)", className="font-mono"),
-                    dcc.Input(id='take-profit', type='number', step=0.01, placeholder='Enter Take Profit', className="p-1"),
+                    dcc.Input(id='take-profit', type='number', step=1, placeholder='Enter Take Profit', className="p-1"),
                 ],
                
                 
@@ -165,7 +183,7 @@ def layout(stock_id=None, **kwargs):
                   
                 [
                     html.P("Stop Loss (%)", className="font-mono"),
-                     dcc.Input(id='stop-loss', type='number', step=0.01, placeholder='Enter Stop Loss', className="p-1"),
+                     dcc.Input(id='stop-loss', type='number', step=1, placeholder='Enter Stop Loss', className="p-1"),
                 ],
                
                 
@@ -174,7 +192,7 @@ def layout(stock_id=None, **kwargs):
                 html.Div(
                   
                 [
-                    html.P("Buy Amount", className="font-mono"),
+                    html.P("Buy Amount (%)", className="font-mono"),
                     dcc.Input(id='buy-amount', type='number', step=1, placeholder='Enter Buy Amount',className="p-1"),
                 ],
                
@@ -207,10 +225,30 @@ def layout(stock_id=None, **kwargs):
           ], className= "flex mt-4 gap-4"
       ),
     
-     
+    
     html.Button('Run Backtest', id='run-backtest', n_clicks=0, className="mt-4 bg-blue-400 rounded-lg p-2 mb-4"),
     html.P("Invalid Input!", className="font-bold text-red-600 ", id="input-invalid"),
-    dcc.Graph(id = "subplot-figure",  style={'height': '1500px'}),
+    html.H3("Result Stats" , className="mb-2"),
+    dash_table.DataTable(
+        id='results-table',
+        columns=[
+            {'name': 'Total Return [%]', 'id': 'Total Return'},
+            {'name': 'Max Drawdown [%]', 'id': 'Max Drawdown'},
+            {'name': 'Avg Trade Duration', 'id': 'Avg Trade Duration'},
+            {'name': 'Win Rate [%]', 'id': 'Win Rate'}
+        ],
+        data=[],  # Pass the data to the table
+        style_table={'width': '50%'},  # Customize width as needed
+        style_cell={
+            'textAlign': 'center',  # Align text
+            'font_family': 'Arial',
+            'font_size': '16px',
+        },
+        
+    ),
+    
+    
+    dcc.Graph(id = "subplot-figure",  style={'height': '1500px' }, className="mt-4"),
 
  
     
