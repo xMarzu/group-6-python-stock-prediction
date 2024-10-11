@@ -126,12 +126,9 @@ def update_graph(pathname,n_clicks_linear,n_clicks_prophet,selected_tab,store_us
         
         start_date = pd.to_datetime(start_date_str, errors='coerce')
         end_date = pd.to_datetime(end_date_str, errors='coerce')
-        print(start_date)
-        print(end_date)
         # Call the linear prediction function
         if n_clicks_linear > 0:
             if validate_dates(start_date, end_date):
-                print('y')
                 # If dates are valid, call the prediction function
                 return start_predict_Linear(stock_id, start_date, end_date)
             else:
