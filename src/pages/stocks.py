@@ -14,6 +14,7 @@ dash.register_page(__name__)
 stocks=sorted(STOCK_LIST) 
 tickers = yf.Tickers(' '.join(stocks)) 
 stockDictionary = {} 
+
 def fetch_stock_information(stock): 
     lst={} 
     ticker_info = tickers.tickers[stock].info 
