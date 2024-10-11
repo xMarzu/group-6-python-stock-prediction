@@ -5,7 +5,7 @@ def predict_info_linear():
         html.Div([
             html.H3("This prediction tool utilizes Linear Regression to forecast stock prices."),
             html.H3("To begin, please enter a start date and an end date for the model's training."),
-            html.H3("After clicking the 'Predict Next Day' button, you will receive the predicted stock price for the following day, along with the R-squared score that indicates the model's performance."),
+            html.H3("After clicking the 'Predict Next Day' button, you will receive the predicted stock price for the next possible trading day, along with the R-squared score that indicates the model's performance."),
             dcc.Markdown("**Note that the model requires at least one month of data to function properly.**")
         ])
     )

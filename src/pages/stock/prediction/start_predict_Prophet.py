@@ -1,6 +1,7 @@
 from linearRegression import download_data, preprocess_data, split_data, train_model, predict_next_day_price, validate_dates
 from prophetModel import get_stock_data, fit_prophet_model, make_prediction, evaluate_prophet_model
 from sklearn.metrics import r2_score
+from datetime import datetime
 import numpy as np
 import plotly.graph_objs as go
 
@@ -39,7 +40,8 @@ def start_predict_Prophet(stock_id, prediction_date_start_prophet,prediction_dat
 
     # Plot predicted price
     if predicted_price is not None:
-        prophet_score=f"\n**Predicted Stock Price** for {prediction_date_future_prophet}: ${predicted_price:.2f} \n\n"
+        formatted_predict_date=prediction_date_future_prophet.strftime("%Y-%m-%d")
+        prophet_score=f"\n**Predicted Stock Price** for {formatted_predict_date}: ${predicted_price:.2f} \n\n"
         # Append the predicted price to the end date
         fig.add_trace(go.Scatter(
             x=[prediction_date_future_prophet],
