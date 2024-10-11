@@ -36,6 +36,15 @@ def scrape_yahoo_finance(url):
     return df
 
 def get_top_loser_gainer():
+    
+    # Function to clean and format the price column
+    def format_price(price_str):
+    # Split the price string by space and take the first part (price)
+        price = price_str.split()[0]
+        # Add the dollar sign before the price
+        return f"${price}"
+
+
 
     # Define the URLs for gainers and losers on Yahoo Finance
     gainers_url = 'https://finance.yahoo.com/markets/stocks/gainers/'
@@ -48,6 +57,7 @@ def get_top_loser_gainer():
     top_gainers = top_gainers.head(5)
     
     top_gainers = top_gainers[["Symbol", "Price", "Change %", "Market Cap"]]
+    top_gainers["Price"] = top_gainers["Price"].apply(format_price)
    
 
 
@@ -55,7 +65,7 @@ def get_top_loser_gainer():
     top_losers = scrape_yahoo_finance(losers_url)
     top_losers = top_losers.head(5)
     top_losers = top_losers[["Symbol", "Price", "Change %", "Market Cap"]]
-
+    top_losers["Price"] = top_losers["Price"].apply(format_price)
     return top_gainers, top_losers
 
 

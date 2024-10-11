@@ -45,7 +45,7 @@ def navbar():
                         "Sign Up", className="bg-blue-300 px-2 py-1"
                     ),
                 ],
-                className="flex gap-4"
+                className="flex gap-4 invisible"
             ),
             
            
