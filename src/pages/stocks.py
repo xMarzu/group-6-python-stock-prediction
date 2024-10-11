@@ -7,6 +7,7 @@ import dash_bootstrap_components as dbc
 import yfinance as yf 
 from concurrent.futures import ThreadPoolExecutor, as_completed 
 from constants import STOCK_LIST
+from src.components.stock.stock_layout_functions import format_large_number
 ##stocks page
 dash.register_page(__name__)
 
@@ -20,7 +21,7 @@ def fetch_stock_information(stock):
     ticker_info = tickers.tickers[stock].info 
     lst["Company_Name"]=ticker_info.get('longName', 'N/A') 
     lst["Industry"]=ticker_info.get('industry', 'N/A') 
-    lst["Market_Cap"]=ticker_info.get('marketCap', 'N/A')  
+    lst["Market_Cap"]=format_large_number(ticker_info.get('marketCap', 'N/A'))
     stockDictionary[stock]=lst 
     return stock,lst 
  
