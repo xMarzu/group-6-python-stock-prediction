@@ -9,6 +9,7 @@ from src.components.stock.stock_layout_functions import get_stock_id_from_url
 from src.components.stock.backtesting.sma_crossover import backtestSmaCrossover
 from src.components.stock.single_stock_base_layout import stock_base_layout
 from src.components.stock.backtesting.plot_equity import plot_equity
+from src.components.stock.backtesting.backtesting_settings import generate_backtesting_settings
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import pandas as pd
@@ -29,25 +30,6 @@ def show_sma_inputs(data):
         return {"visibility" : "hidden"}, {"visibility" : "hidden"}
     
 
-# Callback to store user inputs
-@callback(
-    Output('user-input-store', 'data'),
-    Input('take-profit', 'value'),
-    Input('stop-loss', 'value'),
-    Input('buy-amount', 'value'),
-    Input('strategy-dropdown', 'value'),
-    Input('average-short', 'value'),
-    Input('average-long', 'value'),
-)
-def store_user_inputs(take_profit, stop_loss, buy_amount, strategy, average_short, average_long):
-    return {
-        'take_profit': take_profit,
-        'stop_loss': stop_loss,
-        'buy_amount': buy_amount,
-        'strategy': strategy,
-        'average_short': average_short,
-        'average_long': average_long,
-    }
 
 @callback([Output("subplot-figure","figure") ,Output("input-invalid","style"), Output("results-table", "data")], [Input("run-backtest", "n_clicks"), Input("url","pathname")], State('user-input-store', 'data'))
 def runSMA(n_clicks, url, user_inputs):
@@ -108,12 +90,15 @@ def runSMA(n_clicks, url, user_inputs):
         equity_curve = stats['Equity Curve']
         trades = stats["Trades"]
         candlestick = stats["Candlestick"]
+        trade_duration = f"{stats['Avg Trade Duration'].days} days"
         results_table_data = [{
             'Total Return': stats['Total Return'],
             'Max Drawdown': stats['Max Drawdown'],
-            'Avg Trade Duration': stats['Avg Trade Duration'],
+            'Avg Trade Duration': trade_duration,
             'Win Rate': stats['Win Rate']
         }]
+      
+
         equity_curve = equity_curve.reset_index()
         # Merge the trades with the full dataset to expand the rows
         merged_data = pd.merge(equity_curve, trades, left_on='Date', right_on='EntryTime', how='left')
@@ -149,81 +134,10 @@ def layout(stock_id=None, **kwargs):
      
     
     return(
-      stock_base_layout(stock_id),
-      dcc.Store(id='user-input-store'),  # Store for user inputs
-      html.Div(
-          [
-              html.Div(
-                  [
-                    html.P("Backtesting Strategy", className="font-mono"),
-                    dcc.Dropdown(
-                    id='strategy-dropdown',
-                    options=[
-                         {'label': 'MACD', 'value': 'macd'},
-                        {'label': 'SMA', 'value': 'sma'},
-                       
-                        {'label': 'RSI', 'value': 'rsi'},
-                    ],
-                    value='macd'  # Default value
-                ), 
-                  ]
-                 
-              ),
-              html.Div(
-                  
-                [
-                    html.P("Take Profit (%)", className="font-mono"),
-                    dcc.Input(id='take-profit', type='number', step=1, placeholder='Enter Take Profit', className="p-1"),
-                ],
-               
-                
-                className="flex flex-col h-full"
-              ),
-               html.Div(
-                  
-                [
-                    html.P("Stop Loss (%)", className="font-mono"),
-                     dcc.Input(id='stop-loss', type='number', step=1, placeholder='Enter Stop Loss', className="p-1"),
-                ],
-               
-                
-                className="flex flex-col h-full"
-              ),
-                html.Div(
-                  
-                [
-                    html.P("Buy Amount (%)", className="font-mono"),
-                    dcc.Input(id='buy-amount', type='number', step=1, placeholder='Enter Buy Amount',className="p-1"),
-                ],
-               
-                
-                className="flex flex-col h-full"
-              ),
-                html.Div(
-                  
-                [
-                    html.P("Average Short", className="font-mono"),
-                    dcc.Input(id='average-short', type='number', step=1, placeholder='Enter Average Short', className="p-1"),
-                ],
-               
-                
-                className="flex flex-col h-full ", id="average-short-container"
-              ),
-                html.Div(
-                  
-                [
-                    html.P("Average Long", className="font-mono"),
-                    dcc.Input(id='average-long', type='number', step=1, placeholder='Enter Average Long', className="p-1"),
-                ],
-               
-                
-                className="flex flex-col h-full ", id="average-long-container"
-              )
-                
-                
-        
-          ], className= "flex mt-4 gap-4"
-      ),
+    stock_base_layout(stock_id),
+    dcc.Store(id='user-input-store'),  # Store for user inputs
+    generate_backtesting_settings(),
+      
     
     
     html.Button('Run Backtest', id='run-backtest', n_clicks=0, className="mt-4 bg-blue-400 rounded-lg p-2 mb-4"),
@@ -232,10 +146,10 @@ def layout(stock_id=None, **kwargs):
     dash_table.DataTable(
         id='results-table',
         columns=[
-            {'name': 'Total Return [%]', 'id': 'Total Return'},
-            {'name': 'Max Drawdown [%]', 'id': 'Max Drawdown'},
+            {'name': 'Total Return [%]', 'id': 'Total Return',"type": "numeric", "format": { "specifier": ".4s"}},
+            {'name': 'Max Drawdown [%]', 'id': 'Max Drawdown',"type": "numeric", "format": { "specifier": ".4s"}},
             {'name': 'Avg Trade Duration', 'id': 'Avg Trade Duration'},
-            {'name': 'Win Rate [%]', 'id': 'Win Rate'}
+            {'name': 'Win Rate [%]', 'id': 'Win Rate',"type": "numeric", "format": { "specifier": ".4s"}}
         ],
         data=[],  # Pass the data to the table
         style_table={'width': '50%'},  # Customize width as needed

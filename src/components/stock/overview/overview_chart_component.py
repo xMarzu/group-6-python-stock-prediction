@@ -10,17 +10,7 @@ import plotly.graph_objs as go
 
 
 
-# @callback(Output("button-container", "children"), Input("graph-container", "children"))
-# def generate_buttons(container):
-
-#     if container is None:
-#         pass
-#     else:
-#         return (
-          
-           
-#         )
-
+##Callback for returning the candlestick/line graph based on the current chart store
 @callback(Output("graph-container", "children"), [Input("chart-store", "data"), Input("swap-button", "n_clicks")])
 def plot_chart(data, clicks):
     
@@ -36,6 +26,8 @@ def plot_chart(data, clicks):
             candlestick = generate_candlestick_chart(data)
             return dcc.Graph(figure=candlestick)
 
+
+##Get the stock data when the user clicks on any of the graph buttons, 5d,1m,etc
 @callback(Output("chart-store", "data"), [Input("url","pathname"), Input({'type':'graph-button', 'index':ALL, 'value': ALL},"n_clicks")] )
 def store_chart_data(url: str, buttons):
     stock_id = get_stock_id_from_url(url=url)

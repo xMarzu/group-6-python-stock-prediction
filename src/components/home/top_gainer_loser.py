@@ -1,9 +1,24 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+from dash import html, callback, Output,  Input, dcc,ctx, ALL, dash_table
 
-# Function to scrape the top gainers or losers from Yahoo Finance
+
+
+
+
+
 def scrape_yahoo_finance(url):
+    """Scapes yahoo finance page
+
+    Args:
+        url (str): URL you want to scrape from 
+
+    Returns:
+        DataFrame: Dataframe of scraped data
+    """
+    
+    
     # Send a request to the URL
     response = requests.get(url)
     
@@ -36,6 +51,8 @@ def scrape_yahoo_finance(url):
     return df
 
 def get_top_loser_gainer():
+    """Gets the top losers and gainers in the stock market based on Yahoo Finance
+    """
     
     # Function to clean and format the price column
     def format_price(price_str):
@@ -46,7 +63,7 @@ def get_top_loser_gainer():
 
 
 
-    # Define the URLs for gainers and losers on Yahoo Finance
+    # URLs for gainers and losers on Yahoo Finance
     gainers_url = 'https://finance.yahoo.com/markets/stocks/gainers/'
     losers_url = 'https://finance.yahoo.com/markets/stocks/losers/'
 
@@ -69,3 +86,70 @@ def get_top_loser_gainer():
     return top_gainers, top_losers
 
 
+
+##Callback for returning the top gainers and top losers into the data proeprty of dash tables
+@callback([Output("top-gainer-table", "data"), Output("top-loser-table", "data")], Input("top-gainer-table", "id"))
+def load_loser_gainer(id):
+    top_gainer, top_loser = get_top_loser_gainer()  
+    return top_gainer.to_dict("records"), top_loser.to_dict("records")
+
+
+
+def generate_top_loser_gainer():
+    """Generates a top loser/gainer layout
+    """
+    return (
+        html.Div(
+                [
+                   html.Div(
+                    [
+                        html.H3("Top Gainers"),
+                        dash_table.DataTable(
+                        id='top-gainer-table',
+                        columns=[
+                            {'name': 'Symbol', 'id': 'Symbol'},
+                            {'name': 'Price', 'id': 'Price'},
+                            {'name': 'Change %', 'id': 'Change %'},
+                            {'name': 'Market Cap', 'id': 'Market Cap'}
+                        ],
+                        data=[],  # Pass the data to the table
+                        style_table={'width': '50%'},  # Customize width as needed
+                        style_cell={
+                            'textAlign': 'center',  # Align text
+                            'font_family': 'Arial',
+                            'font_size': '16px',
+                            "padding" : "8px"
+                        },
+                        
+                        ), 
+                    ], className="flex flex-col gap-4"
+                    
+                   ),
+                   html.Div(
+                    [
+                        html.H3("Top Losers"),
+                        dash_table.DataTable(
+                        id='top-loser-table',
+                        columns=[
+                             {'name': 'Symbol', 'id': 'Symbol'},
+                            {'name': 'Price', 'id': 'Price'},
+                            {'name': 'Change %', 'id': 'Change %'},
+                            {'name': 'Market Cap', 'id': 'Market Cap'}
+                        ],
+                        data=[],  #Data that will be input from the callback 
+                        style_table={'width': '50%'},  
+                        style_cell={
+                            'textAlign': 'center',  
+                            'font_family': 'Arial',
+                            'font_size': '16px',
+                             "padding" : "8px"
+                        },
+                        
+                        ), 
+                    ], className="flex flex-col gap-4"
+                    
+                   )
+                    
+                ], className="flex gap-4"
+            )
+    )

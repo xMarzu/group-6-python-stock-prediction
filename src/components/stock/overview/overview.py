@@ -23,9 +23,6 @@ def overview_layout(stock_id : str):
                     [
                         generate_overview_indicators(stock_id=stock_id),
                         generate_chart_component(),
-                        
-                        
-                         
                     ],className="flex gap-8"
                 ),
                 html.Div(

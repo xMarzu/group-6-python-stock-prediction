@@ -1,3 +1,4 @@
+import math
 import pandas as pd 
 import yfinance as yf
 import mplfinance as mpf
@@ -71,20 +72,28 @@ def getCandlestickChart():
         except Exception as e:
             print(f'Error fetching data for {stockSymbol}: {e}')
 
-# Download CSV file containing stock data into users download folder
-def downloadCSV(ticker):
-    try:
-        #Download stock data from yfinance for the last 10 years
-        data = yf.download(tickers=ticker,period = '10y')
 
-        #Set download path for user's download folder
-        download_folder = os.path.expanduser('~/Downloads')
-        csv_file_path = os.path.join(download_folder, f'{ticker}_data.csv')
 
-        #Save the downloaded data into a CSV file
-        data.to_csv(csv_file_path)
 
-        print(f"Data for {ticker} saved to {csv_file_path}")
+def format_large_number(number):
+    """Formats a large number into K, M, B , T, etc.
 
-    except:
-        print(f'Error downloading data for {ticker}')
+    Args:
+        number (float): Number you want to reformat 
+
+    Returns:
+        number (float): Reformatted Number
+    """
+    suffixes = ['', 'K', 'M', 'B', 'T']
+    if number == 0:
+        return "0"
+    
+    # Calculate the log base 1000 to determine the index for the suffix
+    magnitude = int(math.floor(math.log10(abs(number)) / 3))
+    
+    # Limit the index to the available suffixes
+    magnitude = min(magnitude, len(suffixes) - 1)
+    
+    # Scale the number down and format with the correct suffix
+    scaled_number = number / (10 ** (3 * magnitude))
+    return f"{scaled_number:.2f}{suffixes[magnitude]}"

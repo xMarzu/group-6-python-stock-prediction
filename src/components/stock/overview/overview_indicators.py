@@ -1,9 +1,13 @@
 import yfinance as yf
 from dash import html, callback, Output,  Input, dcc,ctx, ALL
-from src.components.stock.stock_layout_functions import get_stock_id_from_url
+from src.components.stock.stock_layout_functions import format_large_number, get_stock_id_from_url
 from datetime import datetime
 import math
 
+
+
+
+##Callback for updating each of the overview indicators when the overview storeis updated at first load of webpage 
 @callback([Output("overview-market-cap", "children"), Output("overview-revenue", "children"),
            Output("overview-net-income", "children"), Output("overview-shares-out", "children"),
            Output("overview-eps", "children"),Output("overview-pe-ratio", "children"),
@@ -20,29 +24,18 @@ def fetch_overview_indicators(data):
             data["forward_pe"], data["dividend_rate"], data["dividend_date"], data["volume"], data["stock_open"], 
             data["stock_prev_close"], data["day_range"], data["_52_week_range"], data["beta"], data["analysts"], data["price_target"], data["payout_ratio"])
 
+
+#Fetch and store the data that is needed in the inidcators into the overview store
 @callback(Output("overview-store", "data"), Input("url","pathname"))
 def allocate_overview_indicators(url):
     
     
-    def format_large_number(number):
-        suffixes = ['', 'K', 'M', 'B', 'T']
-        if number == 0:
-            return "0"
-        
-        # Calculate the log base 1000 to determine the index for the suffix
-        magnitude = int(math.floor(math.log10(abs(number)) / 3))
-        
-        # Limit the index to the available suffixes
-        magnitude = min(magnitude, len(suffixes) - 1)
-        
-        # Scale the number down and format with the correct suffix
-        scaled_number = number / (10 ** (3 * magnitude))
-        return f"{scaled_number:.2f}{suffixes[magnitude]}"
+ 
     stock_id = get_stock_id_from_url(url)
     ticker = yf.Ticker(stock_id)
    
     info = ticker.info
-    print(info)
+
     
     # Safely extract data with default "NA" if key does not exist
     market_cap = format_large_number( info.get("marketCap", "NA"))

@@ -3,6 +3,12 @@ import yfinance as yf
 
 # Download CSV file containing stock data into users download folder
 def downloadCSV(ticker,period):
+    """Downloads the current ticker info into the user's downloads folder
+
+    Args:
+        ticker (string): Current Ticker
+        period (string): Period of time
+    """
     try:
         #Download stock data from yfinance for the specific stock ticker and period
         data = yf.download(tickers=ticker,period = period)

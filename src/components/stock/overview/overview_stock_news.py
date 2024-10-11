@@ -22,6 +22,7 @@ def get_og_image(article_url):
     return None
 
 
+##Callback for outputing the news store into the news-container
 @callback(Output("news-container", "children"), Input("news-store", "data"))
 def create_news(articles):
     if articles is None or len(articles) == 0:
@@ -30,7 +31,7 @@ def create_news(articles):
     # Limit to the top 5 articles
     top_articles = articles[:5]
 
-    # Create a list of html.Div elements for the top 10 articles
+    # Create a list of html.Div elements for the top 5 articles
     article_elements = []
     for article in top_articles:
         # Fetch the OG image from the article's URL with a timeout to avoid slow loading
@@ -45,7 +46,7 @@ def create_news(articles):
                     
                 ) if  og_image_url else None,
 
-                # Text content (Title, Summary, etc.)
+                
                 html.Div(
                     [
                         # Title with clickable link
@@ -77,7 +78,7 @@ def create_news(articles):
                             style={"margin-top": "5px", "color": "blue"}
                         )
                     ],
-                    style={"flex": "1"}  # Make sure text takes up the remaining space
+                    style={"flex": "1"}  
                 )
             ],
             style={"display": "flex", "align-items": "center", "margin-bottom": "20px", "border": "1px solid #e3e3e3", "padding": "10px", "border-radius": "5px"}
@@ -100,6 +101,8 @@ def fetch_stock_news(url):
 
 
 def generate_stock_news():
+    """Generates a few stock news related to the current stock id based on the url
+    """
     return(
         html.Div(
             [
@@ -112,10 +115,5 @@ def generate_stock_news():
             ]
         )
        
-        
-        # html.Div(
-        #     children=[
-        #         html.P("hello")
-        #     ], id="news-container")
         
     )
