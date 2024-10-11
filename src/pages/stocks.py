@@ -10,8 +10,8 @@ from constants import STOCK_LIST
 ##stocks page
 dash.register_page(__name__)
 
-stocks = STOCK_LIST
-stocks=sorted(stocks) 
+
+stocks=sorted(STOCK_LIST) 
 tickers = yf.Tickers(' '.join(stocks)) 
 stockDictionary = {} 
 def fetch_stock_information(stock): 
