@@ -15,14 +15,15 @@ def stock_tabs(stock_id : str):
                     href=f"/stocks/{stock_id}"
                 ),
                 html.A(
+                    html.Button("Backtesting"),
+                    href=f"/stocks/{stock_id}/backtesting"
+                ),
+                html.A(
                     html.Button("Prediction"),
                     href=f"/stocks/{stock_id}/prediction"
                 ),
                 
-                 html.A(
-                    html.Button("Backtesting"),
-                    href=f"/stocks/{stock_id}/backtesting"
-                ),
+                
                 
             ], className="flex gap-4 text-blue-400"
         )
