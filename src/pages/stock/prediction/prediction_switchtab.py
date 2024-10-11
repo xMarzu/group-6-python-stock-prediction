@@ -21,6 +21,7 @@ def prediction_switchtab(formatted_date,tomorrow,years_before):
                     placeholder='DD/MM/YYYY',
                     initial_visible_month=formatted_date,
                     display_format='DD/MM/YYYY',
+                    max_date_allowed=formatted_date,
                     date=years_before),
                 dcc.Markdown("**End Date:**"),
                 dcc.DatePickerSingle(
@@ -28,6 +29,7 @@ def prediction_switchtab(formatted_date,tomorrow,years_before):
                     placeholder='DD/MM/YYYY',
                     initial_visible_month=formatted_date,
                     display_format='DD/MM/YYYY',
+                    max_date_allowed=formatted_date,
                     date=formatted_date),
                 html.Br(), 
                 html.Button('Predict Next Day', id='predict-button-linear', n_clicks=0,className="mt-4 bg-blue-400 rounded-lg p-2 mb-4"),
@@ -42,6 +44,7 @@ def prediction_switchtab(formatted_date,tomorrow,years_before):
                     placeholder='DD/MM/YYYY',
                     initial_visible_month=formatted_date,
                     display_format='DD/MM/YYYY',
+                    max_date_allowed=formatted_date,
                     date=years_before),
                 dcc.Markdown("**End Date:**"),
                 dcc.DatePickerSingle(
@@ -49,6 +52,7 @@ def prediction_switchtab(formatted_date,tomorrow,years_before):
                     placeholder='DD/MM/YYYY',
                     initial_visible_month=formatted_date,
                     display_format='DD/MM/YYYY',
+                    max_date_allowed=formatted_date,
                     date=formatted_date),
                 dcc.Markdown("**Date you wish to predict:**"),
                 dcc.DatePickerSingle(
