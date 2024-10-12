@@ -1,6 +1,7 @@
 from linearRegression import download_data, preprocess_data, split_data, train_model, predict_next_day_price, validate_dates
 from prophetModel import get_stock_data, fit_prophet_model, make_prediction, evaluate_prophet_model
 from sklearn.metrics import r2_score
+from dash import html, dcc, callback, Output, Input, State,dash_table
 import numpy as np
 import plotly.graph_objs as go
 
@@ -8,6 +9,7 @@ def start_predict_Linear(stock_id,prediction_date_start_linear,prediction_date_e
     invalid=[]
     invalid2=[]
     prophet_score=[]
+    prophet_table=[]
     # Main Execution - Download stock data
     ticker = stock_id 
     start_date = prediction_date_start_linear
@@ -66,8 +68,8 @@ def start_predict_Linear(stock_id,prediction_date_start_linear,prediction_date_e
     y_pred = model.predict(testing_x)
     r2 = r2_score(testing_y, y_pred)
     #First line is the next s
-    r2_scores = f"\n**Predicted Stock Price for the next possible trading day**: ${predicted_price:.2f} \n\n" \
-                f"**R-squared score:** {r2:.4f}  \n" \
+    r2_scores = f"\n**Predicted Stock Price for the next possible trading day**: ${predicted_price:.2f} \n\n"
+    r2_scores2= f"**R-squared score:** {r2:.4f}  \n" \
                 f"**Explanation:** The R-squared (R²) score measures how well the model predicts stock prices.  \n" \
                 f"An R² score of 1.0 indicates a perfect prediction, while a score close to 0 means the model's predictions are less accurate."
 
@@ -76,4 +78,4 @@ def start_predict_Linear(stock_id,prediction_date_start_linear,prediction_date_e
                       xaxis_title='Date',
                       yaxis_title='Stock Price',
                       xaxis_rangeslider_visible=True)
-    return fig ,r2_scores,invalid,prophet_score,invalid2
+    return fig ,r2_scores,r2_scores2,invalid,prophet_score,prophet_score,invalid2,prophet_table

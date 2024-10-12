@@ -77,6 +77,18 @@ def validate_dates(start_date, end_date):
 	if (end_date - start_date).days < 30:
 		return False
 	return True
+def validate_dates2(start_date, end_date,predict_date):
+	start_date = pd.to_datetime(start_date, errors='coerce')
+	end_date = pd.to_datetime(end_date, errors='coerce')
+	predict_date = pd.to_datetime(predict_date, errors='coerce')
+	if pd.isna(start_date) or pd.isna(end_date) or pd.isna(predict_date):
+		return False
+	if end_date < start_date:
+		return False
+	if (end_date - start_date).days < 30:
+		return False
+	return True
+
 
 
 def main():

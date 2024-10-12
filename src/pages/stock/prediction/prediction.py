@@ -12,13 +12,14 @@ dash.register_page(__name__, path_template="/stocks/<stock_id>/prediction")
 def layout(stock_id=None, **kwargs):
     # Get today's date and format into yyyy-mm-dd
     today = date.today()
-    years_before = today - relativedelta(years=10)
+    years_before_10 = today - relativedelta(years=10)
+    years_before_4 = today - relativedelta(years=4)
     tomorrow = today + timedelta(days=1)
     formatted_date = today.strftime("%Y-%m-%d")
     
     return html.Div([
         stock_base_layout(stock_id),
-        prediction_switchtab(formatted_date,tomorrow,years_before)
+        prediction_switchtab(formatted_date,tomorrow,years_before_10,years_before_4)
     ])
 
 
